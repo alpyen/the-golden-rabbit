@@ -1,0 +1,27 @@
+ToDo-List:
+
+Complete mod.xml
+
+Write README.md
+
+Check .tgr file for correct syntax and semantics after JSON.parseFile.
+Remove elements and output warnings/errors on incorrect elements.
+Parse file afterwards
+
+Add directory scanning for .tgr files.
+Add automatic parsing for the scanned files.
+
+
+
+
+
+
+Add automatic/easy way of creating new .tgr files.
+
+
+
+Notes:
+
+	The error handling in parser.as is so detailed because we are writing the json files
+	by hand right now. Upon later automation, the detailed checks will be removed,
+	and a simple yes/no parseable output will be displayed.

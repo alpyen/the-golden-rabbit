@@ -1,0 +1,32 @@
+{
+  "levels" : [
+    {
+      "level_name" : "Data/Levels/the-golden-rabbit/testlevel.xml",
+      "positions" : 
+      [
+        {
+          "camera" : [ 5.680, 0.951, -2.503 ],
+          "statue" : [ 4.245, 0.551, -5.371 ]
+        },
+        {
+          "camera" : [ -12.609, 1.131, -13.794 ],
+          "statue" : [ -14.732, 0.551, -16.350 ]
+        }
+      ]
+    },
+	{
+      "level_name" : "Data/Levels/the-golden-rabbit/anderes_level.xml",
+      "positions" : 
+      [
+        {
+          "camera" : [ 5.680, 0.951, -2.503 ],
+          "statue" : [ 4.245, 0.551, -5.371 ]
+        },
+        {
+          "camera" : [ -12.609, 1.131, -13.794 ],
+          "statue" : [ -14.732, 0.551, -16.350 ]
+        }
+      ]
+    }
+  ]
+}

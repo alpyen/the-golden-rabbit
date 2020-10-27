@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<Mod>
+	<Id>the-golden-rabbit</Id>
+	<Name>The Golden Rabbit</Name>
+	<Category>Mod</Category>
+	<Author>_Ins4ne_ (alpines)</Author>
+	<Description>
+		DON'T FORGET TO ADD A DESCRIPTION!
+	</Description>
+	<Version>1.0.0</Version>
+	<Thumbnail>Data/Images/the-golden-rabbit/mod_thumb.jpg</Thumbnail>
+	<PreviewImage>Data/Images/the-golden-rabbit/mod_full.jpg</PreviewImage>
+	<Tag>Treasure Hunt</Tag>
+	<Tag>Scripting</Tag>
+	<SupportedVersion>*</SupportedVersion>
+	<NeedsRestart>false</NeedsRestart>
+	
+	<LevelHookFile>Data/Scripts/the-golden-rabbit/LevelScripts/the_golden_rabbit.as</LevelHookFile>
+</Mod>
