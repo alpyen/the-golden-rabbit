@@ -4,6 +4,21 @@ Complete mod.xml
 
 Write README.md
 
+Account for the rotation of the statue in the .tgr files.
+
+Add own resizing instaed of doScreenResize()
+
+Account for camera FOV (use specific FOV for preview, and reset afterwards)
+
+Implement messag reset (status preview running = false etc) only resetting everything for now because devphase
+
+freeze characters during preview and set the correct static values back
+
+Copy the custom ImGuiGetTime function from other mod with is_paused.
+the preview should pause ifthe game is paused too!
+
+camera might glitch around during preview and jumping into the editor with f1
+
 Check .tgr file for correct syntax and semantics after JSON.parseFile.
 Remove elements and output warnings/errors on incorrect elements.
 Parse file afterwards
