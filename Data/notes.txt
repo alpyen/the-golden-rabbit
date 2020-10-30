@@ -12,6 +12,11 @@ Account for camera FOV (use specific FOV for preview, and reset afterwards)
 
 Implement messag reset (status preview running = false etc) only resetting everything for now because devphase
 
+
+Fix animation to 36 frames (0dg, 10dg, .... 350dg), it's 35 frames now.
+Don't forget to adjust the loop limit to more one!!
+
+
 freeze characters during preview and set the correct static values back
 
 Copy the custom ImGuiGetTime function from other mod with is_paused.
@@ -29,6 +34,11 @@ Add automatic parsing for the scanned files.
 
 
 
+
+Move the GUI further to the right or scale it bigger, because there are some pixels free although
+the counter GUI should sit flush to the right window border.
+
+Performancetest if loading all the images beforehand in Init is worth it so it doesnt hickup during the first statue find.
 
 
 Add automatic/easy way of creating new .tgr files.
