@@ -10,12 +10,16 @@ const float PREVIEW_DURATION = 2.0f;
 const float COUNTER_SLIDE_DURATION = 0.5f;
 const float COUNTER_DURATION = 5.0f;
 
+float last_pause_timestamp;
+float paused_time_in_level;
+
 array<TGRLevel@> tgr_levels;
 int level_index = -1;
 int level_progress = -1;
 
 int rabbit_statue_id = -1;
 int player_id = -1;
+bool reset_level_queued = false;
 
 float before_preview_fade_timestamp;
 bool preview_fade_mode_switched = false;
@@ -33,8 +37,8 @@ float counter_timestamp;
 LevelScriptState current_script_state = LevelScriptState(-1);
 LevelScriptState previous_script_state = LevelScriptState(-1);
 
-CounterState current_counter_state = CS_HIDDEN;
-CounterState previous_counter_state = CS_HIDDEN;
+GuiCounterState current_counter_state = GuiCounterState(-1);
+GuiCounterState previous_counter_state = GuiCounterState(-1);
 
 enum LevelScriptState
 {
@@ -47,12 +51,12 @@ enum LevelScriptState
 	LSS_DO_NOTHING = 6
 }
 
-enum CounterState
+enum GuiCounterState
 {
-	CS_HIDDEN = 0,
-	CS_SLIDING_IN = 1,
-	CS_SHOWING = 2,
-	CS_SLIDING_OUT = 3
+	GCS_HIDDEN = 0,
+	GCS_SLIDING_IN = 1,
+	GCS_SHOWING = 2,
+	GCS_SLIDING_OUT = 3
 }
 
 void PostScriptReload()
@@ -67,7 +71,7 @@ void Init(string level_name)
 	// Once with no level_name. // Maybe switch to LSS_INIT again?
 	if (level_name == "") return;
 
-	Log(fatal, ImGui_GetTime() + " Init(\"" + level_name + "\");");
+	Log(fatal, GetLevelTime() + " Init(\"" + level_name + "\");");
 	
 	if (rabbit_statue_id != -1)
 	{
@@ -146,13 +150,38 @@ void Init(string level_name)
 	
 	BuildGUI();
 	
-	previous_counter_state = CounterState(-1);
-	current_counter_state = CS_SLIDING_IN;
-	Log(fatal, "CS_INIT -> CS_SLIDING_IN");
+	previous_counter_state = GuiCounterState(-1);
+	current_counter_state = GCS_SLIDING_IN;
+	Log(fatal, "CS_INIT -> GCS_SLIDING_IN");
 }
 
 void Update(int is_paused)
 {
+	// See reason for this queued approach in ReceiveMessage.
+	if (reset_level_queued)
+	{
+		reset_level_queued = false;
+		PostScriptReload(); // REPLACE WITH CORRECT RESET ROUTINE.
+		
+		return; // Needed or it will bug out again.
+	}
+	
+	// Detect pauses and add them onto the pause timer.
+	if (is_paused == 1)
+	{
+		if (last_pause_timestamp == 0.0f)
+			last_pause_timestamp = GetLevelTime();
+			
+		// This return; is crucial!
+		// We will not execute the rest of the Update function if the game is paused.
+		return;		
+	}
+	else if (is_paused == 0 && last_pause_timestamp > 0.0f)
+	{
+		paused_time_in_level += GetLevelTime() - last_pause_timestamp;
+		last_pause_timestamp = 0.0f;
+	}
+	
 	UpdatePlayerID();
 	
 	switch (current_script_state)
@@ -187,14 +216,14 @@ void Update(int is_paused)
 				}
 			
 				// Reset the timer when the next state will start (if it wasn't the last statue).
-				before_preview_fade_timestamp = ImGui_GetTime();
+				before_preview_fade_timestamp = GetLevelTime();
 				
 				level_progress++;
 				UpdateCounterProgressText();
 				
 				// Only slide out if the counter is hidden. If we touch multiple statues
 				// the gui will just reset and it looks ugly.
-				if (current_counter_state == CS_HIDDEN) current_counter_state = CS_SLIDING_IN;
+				if (current_counter_state == GCS_HIDDEN) current_counter_state = GCS_SLIDING_IN;
 			}
 			
 			
@@ -220,7 +249,7 @@ void Update(int is_paused)
 			else
 			{
 				// It was not the last statue. Advance to the next one after one second.
-				if (ImGui_GetTime() - before_preview_fade_timestamp >= 1.0f)
+				if (GetLevelTime() - before_preview_fade_timestamp >= 1.0f)
 				{
 					statue.SetEnabled(true);
 					statue.SetTranslation(tgr_levels[level_index].positions[level_progress].statue);
@@ -242,7 +271,7 @@ void Update(int is_paused)
 		case LSS_FADE_TO_STATUE: { // Fading for the statue preview.
 			if (DidScriptStateChange())
 			{
-				preview_fade_timestamp = ImGui_GetTime();
+				preview_fade_timestamp = GetLevelTime();
 				
 				preview_fade_image.setColor(vec4(0.0f));
 				preview_fade_image.setVisible(true);
@@ -253,12 +282,12 @@ void Update(int is_paused)
 			// How does the fade work? Fade out - Switch camera position - Fade In
 			
 			// We are fading out. Darken image.
-			if (ImGui_GetTime() - preview_fade_timestamp <= PREVIEW_FADE_DURATION / 2.0f)
+			if (GetLevelTime() - preview_fade_timestamp <= PREVIEW_FADE_DURATION / 2.0f)
 			{
-				float alpha = (ImGui_GetTime() - preview_fade_timestamp) / (PREVIEW_FADE_DURATION / 2.0f);
+				float alpha = (GetLevelTime() - preview_fade_timestamp) / (PREVIEW_FADE_DURATION / 2.0f);
 				preview_fade_image.setColor(vec4(vec3(0.0f), min(1.0f, alpha)));
 			} // We are fading in. Lighten image.
-			else if (ImGui_GetTime() - preview_fade_timestamp > PREVIEW_FADE_DURATION / 2.0f && ImGui_GetTime() - preview_fade_timestamp < PREVIEW_FADE_DURATION)
+			else if (GetLevelTime() - preview_fade_timestamp > PREVIEW_FADE_DURATION / 2.0f && GetLevelTime() - preview_fade_timestamp < PREVIEW_FADE_DURATION)
 			{
 				if (!preview_fade_mode_switched)
 				{
@@ -271,7 +300,7 @@ void Update(int is_paused)
 				
 				UpdateCameraAndListenerToLookAtStatue();
 				
-				float alpha = 1.0f - ((ImGui_GetTime() - preview_fade_timestamp) - (PREVIEW_FADE_DURATION / 2.0f)) / (PREVIEW_FADE_DURATION / 2.0f);
+				float alpha = 1.0f - ((GetLevelTime() - preview_fade_timestamp) - (PREVIEW_FADE_DURATION / 2.0f)) / (PREVIEW_FADE_DURATION / 2.0f);
 				preview_fade_image.setColor(vec4(vec3(0.0f), max(0.0f, alpha)));
 			}
 			else // Fade was completed.
@@ -289,12 +318,12 @@ void Update(int is_paused)
 		case LSS_LOOKING_AT_STATUE: { // Looking at the statue in a preview.
 			if (DidScriptStateChange())
 			{
-				preview_timestamp = ImGui_GetTime();
+				preview_timestamp = GetLevelTime();
 			}
 		
 			UpdateCameraAndListenerToLookAtStatue();
 		
-			if (ImGui_GetTime() - preview_timestamp >= PREVIEW_DURATION)
+			if (GetLevelTime() - preview_timestamp >= PREVIEW_DURATION)
 			{
 				current_script_state = LSS_FADE_TO_PLAYER;
 				Log(fatal, "LSS_LOOKING_AT_STATUE -> LSS_FADE_TO_PLAYER");
@@ -305,7 +334,7 @@ void Update(int is_paused)
 		case LSS_FADE_TO_PLAYER: { // Fading back to the player.
 			if (DidScriptStateChange())
 			{
-				preview_fade_timestamp = ImGui_GetTime();
+				preview_fade_timestamp = GetLevelTime();
 				
 				preview_fade_image.setColor(vec4(0.0f));
 				preview_fade_image.setVisible(true);
@@ -314,14 +343,14 @@ void Update(int is_paused)
 			}
 			
 			// Check LSS_FADE_TO_STATUE to see how the fade works.			
-			if (ImGui_GetTime() - preview_fade_timestamp <= PREVIEW_FADE_DURATION / 2.0f)
+			if (GetLevelTime() - preview_fade_timestamp <= PREVIEW_FADE_DURATION / 2.0f)
 			{
 				UpdateCameraAndListenerToLookAtStatue();
 			
-				float alpha = (ImGui_GetTime() - preview_fade_timestamp) / (PREVIEW_FADE_DURATION / 2.0f);
+				float alpha = (GetLevelTime() - preview_fade_timestamp) / (PREVIEW_FADE_DURATION / 2.0f);
 				preview_fade_image.setColor(vec4(vec3(0.0f), min(1.0f, alpha)));
 			}
-			else if (ImGui_GetTime() - preview_fade_timestamp > PREVIEW_FADE_DURATION / 2.0f && ImGui_GetTime() - preview_fade_timestamp < PREVIEW_FADE_DURATION)
+			else if (GetLevelTime() - preview_fade_timestamp > PREVIEW_FADE_DURATION / 2.0f && GetLevelTime() - preview_fade_timestamp < PREVIEW_FADE_DURATION)
 			{
 				if (!preview_fade_mode_switched)
 				{
@@ -329,7 +358,7 @@ void Update(int is_paused)
 					preview_running = false;
 				}
 				
-				float alpha = 1.0f - ((ImGui_GetTime() - preview_fade_timestamp) - (PREVIEW_FADE_DURATION / 2.0f)) / (PREVIEW_FADE_DURATION / 2.0f);
+				float alpha = 1.0f - ((GetLevelTime() - preview_fade_timestamp) - (PREVIEW_FADE_DURATION / 2.0f)) / (PREVIEW_FADE_DURATION / 2.0f);
 				preview_fade_image.setColor(vec4(vec3(0.0f), max(0.0f, alpha)));
 			}
 			else
@@ -350,15 +379,15 @@ void Update(int is_paused)
 	
 	switch (current_counter_state)
 	{
-		case CS_HIDDEN: {
-			if (DidCounterStateChange()) { }
+		case GCS_HIDDEN: {
+			if (DidGuiCounterStateChange()) { }
 		} break;
 		
 		
-		case CS_SLIDING_IN: {
-			if (DidCounterStateChange())
+		case GCS_SLIDING_IN: {
+			if (DidGuiCounterStateChange())
 			{
-				counter_slide_timestamp = ImGui_GetTime();
+				counter_slide_timestamp = GetLevelTime();
 				
 				counter_container.setVisible(true);
 				for (uint i = 0; i < counter_container.getFloatingContents().length(); i++)
@@ -367,9 +396,9 @@ void Update(int is_paused)
 		
 			RefreshRabbitStatueAnimation();
 		
-			if (ImGui_GetTime() - counter_slide_timestamp <= COUNTER_SLIDE_DURATION)
+			if (GetLevelTime() - counter_slide_timestamp <= COUNTER_SLIDE_DURATION)
 			{
-				float percentage = (ImGui_GetTime() - counter_slide_timestamp) / COUNTER_SLIDE_DURATION;
+				float percentage = (GetLevelTime() - counter_slide_timestamp) / COUNTER_SLIDE_DURATION;
 			
 				gui.getMain().moveElement(
 					counter_container.getName(),
@@ -381,40 +410,40 @@ void Update(int is_paused)
 			}
 			else
 			{
-				current_counter_state = CS_SHOWING;
-				Log(fatal, "CS_SLIDING_IN -> CS_SHOWING");
+				current_counter_state = GCS_SHOWING;
+				Log(fatal, "GCS_SLIDING_IN -> GCS_SHOWING");
 			}
 		} break;
 		
 		
-		case CS_SHOWING: {
-			if (DidCounterStateChange())
+		case GCS_SHOWING: {
+			if (DidGuiCounterStateChange())
 			{
-				counter_timestamp = ImGui_GetTime();
+				counter_timestamp = GetLevelTime();
 			}
 			
 			RefreshRabbitStatueAnimation();
 			
-			if (ImGui_GetTime() - counter_timestamp >= COUNTER_DURATION)
+			if (GetLevelTime() - counter_timestamp >= COUNTER_DURATION)
 			{
-				current_counter_state = CS_SLIDING_OUT;
-				Log(fatal, "CS_SHOWING -> CS_SLIDING_OUT");
+				current_counter_state = GCS_SLIDING_OUT;
+				Log(fatal, "GCS_SHOWING -> GCS_SLIDING_OUT");
 			}
 			
 		} break;
 		
 		
-		case CS_SLIDING_OUT: {
-			if (DidCounterStateChange())
+		case GCS_SLIDING_OUT: {
+			if (DidGuiCounterStateChange())
 			{
-				counter_slide_timestamp = ImGui_GetTime();
+				counter_slide_timestamp = GetLevelTime();
 			}
 			
 			RefreshRabbitStatueAnimation();
 			
-			if (ImGui_GetTime() - counter_slide_timestamp <= COUNTER_SLIDE_DURATION)
+			if (GetLevelTime() - counter_slide_timestamp <= COUNTER_SLIDE_DURATION)
 			{
-				float percentage = (ImGui_GetTime() - counter_slide_timestamp) / COUNTER_SLIDE_DURATION;
+				float percentage = (GetLevelTime() - counter_slide_timestamp) / COUNTER_SLIDE_DURATION;
 				
 				gui.getMain().moveElement(
 					counter_container.getName(),
@@ -430,8 +459,8 @@ void Update(int is_paused)
 				for (uint i = 0; i < counter_container.getFloatingContents().length(); i++)
 					counter_container.getFloatingContents()[i].setVisible(false);
 			
-				current_counter_state = CS_HIDDEN;
-				Log(fatal, "CS_SLIDING_OUT -> CS_HIDDEN");
+				current_counter_state = GCS_HIDDEN;
+				Log(fatal, "GCS_SLIDING_OUT -> GCS_HIDDEN");
 			}
 			
 		} break;
@@ -442,8 +471,12 @@ void ReceiveMessage(string message)
 {
 	if (message == "reset")
 	{
-		Log(fatal, "void ReceiveMessage(\"reset\");");
-		PostScriptReload();
+		// Why is this bool set and checked in Update?
+		// The current Update call will be interrupted and ReceiveMessage will be called.
+		// If we directly run the reset routine, the running instance of Update will still have the old values
+		// and the script will experience bugs. So queue an update here, and check on Update().
+		
+		reset_level_queued = true;
 	}
 }
 
@@ -492,7 +525,7 @@ bool DidScriptStateChange()
 }
 
 
-bool DidCounterStateChange()
+bool DidGuiCounterStateChange()
 {
 	bool changed = previous_counter_state != current_counter_state;
 	previous_counter_state = current_counter_state;
@@ -519,4 +552,9 @@ void UpdatePlayerID()
 			}
 		}
 	}
+}
+
+float GetLevelTime()
+{
+	return ImGui_GetTime() - paused_time_in_level;
 }

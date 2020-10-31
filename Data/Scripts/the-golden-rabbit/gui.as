@@ -17,6 +17,8 @@ int AMOUNT_RABBIT_STATUE_ANIMATION_FRAMES = 35;
 
 void UpdateCounterProgressText()
 {
+	Log(fatal, "Updating Progress: " + level_progress);
+
 	level_progress_text.setText(level_progress + " / " + tgr_levels[level_index].positions.length());
 	
 	gui.update();
@@ -34,7 +36,7 @@ void UpdateCounterProgressText()
 
 void RefreshRabbitStatueAnimation()
 {
-	int frame = int(floor((ImGui_GetTime() - floor(ImGui_GetTime())) * 35));
+	int frame = int(floor((GetLevelTime() - floor(GetLevelTime())) * 35));
 
 	rabbit_statue_image.setImageFile(
 		"Textures/the-golden-rabbit/UI/Animations/rabbit_statue/frame_" + frame + ".png"
@@ -75,26 +77,26 @@ void BuildGUI()
 	preview_fade_image.setColor(vec4(0.0f));
 	preview_fade_image.setVisible(false);
 	
-	gui.getMain().addFloatingElement(preview_fade_image, "preview_fade_image", vec2(0.0f), 10);
+	gui.getMain().addFloatingElement(preview_fade_image, "preview_fade_image", vec2(0.0f), 1);
 
 	// Setup the counter UI.
 	@counter_container = IMContainer();
-	gui.getMain().addFloatingElement(counter_container, "counter_container", vec2(0.0f), 1);
+	gui.getMain().addFloatingElement(counter_container, "counter_container", vec2(0.0f), 2);
 	
 	@counter_background_image = IMImage("Textures/UI/whiteblock.tga");
 	counter_background_image.setColor(vec4(vec3(0.0f), 0.4f));
-	counter_container.addFloatingElement(counter_background_image, "counter_background_image", vec2(0.0f), 2);
+	counter_container.addFloatingElement(counter_background_image, "counter_background_image", vec2(0.0f), 3);
 	
 	@rabbit_statue_image = IMImage("Textures/the-golden-rabbit/UI/Animations/rabbit_statue/frame_0.png");
 		
 	rabbit_statue_image.scaleToSizeY(COUNTER_GUI_RABBIT_STATUE_HEIGHT);
-	counter_container.addFloatingElement(rabbit_statue_image, "rabbit_statue_image", vec2(0.0f), 3);
+	counter_container.addFloatingElement(rabbit_statue_image, "rabbit_statue_image", vec2(0.0f), 4);
 	
 	// We need the widest string possible in the level, otherwise if we start with a smaller string,
 	// then the text will be off-balance and we need to resize everything which might mess with our sliding in animation.
 	// So we just set the max width and if we set a smaller width later, we just move it to the center.
 	@level_progress_text = IMText(GetMaxWidthLevelProgressTextString(), FontSetup("Underdog-Regular", int(rabbit_statue_image.getSizeY() * 0.85f), vec4(1.0f), true));
-	counter_container.addFloatingElement(level_progress_text, "level_progress_text", vec2(0.0f), 3);
+	counter_container.addFloatingElement(level_progress_text, "level_progress_text", vec2(0.0f), 4);
 	
 	// We added the items beforehand and update now, because we need the sizes of the controls for good arrangement.
 	// If you don't update, then you have to hardcode these values, and that's a no no.
