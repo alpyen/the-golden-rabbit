@@ -4,45 +4,28 @@ Complete mod.xml
 
 Write README.md
 
-Account for the rotation of the statue in the .tgr files.
-
-Add own resizing instaed of doScreenResize()
-
-Account for camera FOV (use specific FOV for preview, and reset afterwards)
 
 Implement messag reset (status preview running = false etc) only resetting everything for now because devphase
+Dying in a level with checkpoints should not reset the statue to the very first position.
+
+make the mod's own level overridable
 
 
 Fix animation to 36 frames (0dg, 10dg, .... 350dg), it's 35 frames now.
 Don't forget to adjust the loop limit to more one!!
 
 
-freeze characters during preview and set the correct static values back
-
-Copy the custom ImGuiGetTime function from other mod with is_paused.
-the preview should pause ifthe game is paused too!
-
 camera might glitch around during preview and jumping into the editor with f1
 
-Check .tgr file for correct syntax and semantics after JSON.parseFile.
-Remove elements and output warnings/errors on incorrect elements.
-Parse file afterwards
 
 Add directory scanning for .tgr files.
 Add automatic parsing for the scanned files.
 
 
-
-
-
-Move the GUI further to the right or scale it bigger, because there are some pixels free although
-the counter GUI should sit flush to the right window border.
-
-Performancetest if loading all the images beforehand in Init is worth it so it doesnt hickup during the first statue find.
+add mod menu
 
 
 Add automatic/easy way of creating new .tgr files.
-
 
 
 Notes:

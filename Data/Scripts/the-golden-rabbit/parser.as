@@ -1,5 +1,3 @@
-#include "the-golden-rabbit/tgrlevel.as"
-
 array<TGRLevel@> ParseLevelsFromFile(string path)
 {
 	array<TGRLevel@> new_levels;
@@ -86,13 +84,13 @@ array<TGRLevel@> ParseLevelsFromFile(string path)
 		{
 			JSONValue current_position = positions[position_counter];
 			
-			if (current_position.getMemberNames().length() != 2)
+			if (current_position.getMemberNames().length() != 3)
 			{
-				LogWarning("Position index " + position_counter + " of the level'" + new_level.level_name + "' has more or less than 2 elements. Skipping Level. [" + path + "]");
+				LogWarning("Position index " + position_counter + " of the level'" + new_level.level_name + "' has more or less than 3 elements. Skipping Level. [" + path + "]");
 				position_invalid = true;
 				break;
 			}
-			else if (current_position.getMemberNames().find("camera") < 0 || current_position.getMemberNames().find("statue") < 0)
+			else if (current_position.getMemberNames().find("camera") < 0 || current_position.getMemberNames().find("statue") < 0 || current_position.getMemberNames().find("statue_rotation") < 0)
 			{
 				LogWarning("Could not find element 'camera' or 'statue' at position index " + position_counter + " of the level'" + new_level.level_name + "'. Skipping Level. [" + path + "]");
 				position_invalid = true;
@@ -106,10 +104,15 @@ array<TGRLevel@> ParseLevelsFromFile(string path)
 			
 			JSONValue camera = current_position["camera"];
 			JSONValue statue = current_position["statue"];
+			JSONValue statue_rotation = current_position["statue_rotation"];
 			
 			Position new_position(
 				vec3(camera[0].asFloat(), camera[1].asFloat(), camera[2].asFloat()),
-				vec3(statue[0].asFloat(), statue[1].asFloat(), statue[2].asFloat())
+				vec3(statue[0].asFloat(), statue[1].asFloat(), statue[2].asFloat()),
+				quaternion(
+					statue_rotation[0].asFloat(), statue_rotation[1].asFloat(),
+					statue_rotation[2].asFloat(), statue_rotation[3].asFloat()
+				)
 			);
 			
 			new_level.positions.insertLast(new_position);

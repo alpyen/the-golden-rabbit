@@ -19,7 +19,6 @@ int level_progress = -1;
 
 int rabbit_statue_id = -1;
 int player_id = -1;
-bool reset_level_queued = false;
 
 float before_preview_fade_timestamp;
 bool preview_fade_mode_switched = false;
@@ -40,15 +39,18 @@ LevelScriptState previous_script_state = LevelScriptState(-1);
 GuiCounterState current_counter_state = GuiCounterState(-1);
 GuiCounterState previous_counter_state = GuiCounterState(-1);
 
+vec3 stored_velocity;
+
 enum LevelScriptState
 {
-	LSS_PLAYER_IS_SEARCHING = 0,
-	LSS_STATUE_WAS_FOUND = 1,
-	LSS_FADE_TO_STATUE = 2,
-	LSS_LOOKING_AT_STATUE = 3,
-	LSS_FADE_TO_PLAYER = 4,
-	LSS_ALL_STATUES_FOUND = 5,
-	LSS_DO_NOTHING = 6
+	LSS_INIT = 0,
+	LSS_PLAYER_IS_SEARCHING = 1,
+	LSS_STATUE_WAS_FOUND = 2,
+	LSS_FADE_TO_STATUE = 3,
+	LSS_LOOKING_AT_STATUE = 4,
+	LSS_FADE_TO_PLAYER = 5,
+	LSS_ALL_STATUES_FOUND = 6,
+	LSS_DO_NOTHING = 7
 }
 
 enum GuiCounterState
@@ -61,17 +63,7 @@ enum GuiCounterState
 
 void PostScriptReload()
 {
-	Log(fatal, "PostScriptReload();");
-	Init("From PostScriptReload();");
-}
-
-void Init(string level_name)
-{
-	// If you load a map in the editor then editor will get called twice.
-	// Once with no level_name. // Maybe switch to LSS_INIT again?
-	if (level_name == "") return;
-
-	Log(fatal, GetLevelTime() + " Init(\"" + level_name + "\");");
+	Log(fatal, "PostScriptReload(); ============== RESETTING SCRIPT ==============");
 	
 	if (rabbit_statue_id != -1)
 	{
@@ -99,43 +91,7 @@ void Init(string level_name)
 	
 	preview_timestamp = 0.0f;
 	
-	tgr_levels = ParseLevelsFromFile("Data/Scripts/the-golden-rabbit/custom.tgr");
-	// Check if the current level has TGR data.		
-	
-	level_index = -1;
-	for (uint i = 0; i < tgr_levels.length(); i++)
-	{
-		if (tgr_levels[i].level_name == GetCurrLevelRelPath())
-		{
-			level_index = i;
-			break;
-		}
-	}
-	
-	if (level_index != -1)
-	{	
-		// Spawn the rabbit to the first location.
-		rabbit_statue_id = CreateObject("Data/Objects/therium/rabbit_statue/rabbit_statue_1.xml", true);
-		
-		Object@ statue = ReadObjectFromID(rabbit_statue_id);
-		statue.SetTranslation(tgr_levels[level_index].positions[0].statue);
-		statue.SetScale(vec3(STATUE_SCALE));
-		statue.SetTint(vec3(1.0f, 0.621f, 0.0f) * 8.0f);
-		
-		// Set the level progress to 0.
-		level_progress = 0;
-	
-		previous_script_state = LevelScriptState(-1);
-		current_script_state = LSS_PLAYER_IS_SEARCHING;
-		Log(fatal, "LSS_INIT -> LSS_PLAYER_IS_SEARCHING");
-	}
-	else // Level was not found.
-	{
-		// If the level has no TGR data, jump into a Do Nothing state.
-		previous_script_state = LevelScriptState(-1);
-		current_script_state = LSS_DO_NOTHING;
-		Log(fatal, "LSS_INIT -> LSS_DO_NOTHING");
-	}
+	@gui = null;
 	
 	@counter_container = null;
 	@counter_background_image = null;
@@ -143,29 +99,38 @@ void Init(string level_name)
 	@rabbit_statue_image = null;
 	@level_progress_text = null;
 	
-	
-	// Setup everything in void Init(). Why not as a LSS_INIT state?
-	// We want some things created before they have a chance to execute.
-	// This way we don't need to check every time if the gui !is null in void DrawGui();
-	
-	BuildGUI();
+	previous_script_state = LevelScriptState(-1);
+	current_script_state = LSS_INIT;
+	Log(fatal, "-1 -> LSS_INIT");
 	
 	previous_counter_state = GuiCounterState(-1);
-	current_counter_state = GCS_SLIDING_IN;
-	Log(fatal, "CS_INIT -> GCS_SLIDING_IN");
+	current_counter_state = GCS_HIDDEN;
+	Log(fatal, "-1 -> GCS_HIDDEN");
+	
+	BuildGUI();
+}
+
+void Init(string level_name)
+{
+	// If you load a map in the editor then editor will get called twice.
+	// Once with no level_name. // Maybe switch to LSS_INIT again?
+	if (level_name == "") return;
+
+	Log(fatal, GetLevelTime() + " Init(\"" + level_name + "\");");
+		
+	previous_script_state = LevelScriptState(-1);
+	current_script_state = LSS_INIT;
+	Log(fatal, "-1 -> LSS_INIT");
+	
+	previous_counter_state = GuiCounterState(-1);
+	current_counter_state = GCS_HIDDEN;
+	Log(fatal, "-1 -> GCS_HIDDEN");
+	
+	BuildGUI();
 }
 
 void Update(int is_paused)
 {
-	// See reason for this queued approach in ReceiveMessage.
-	if (reset_level_queued)
-	{
-		reset_level_queued = false;
-		PostScriptReload(); // REPLACE WITH CORRECT RESET ROUTINE.
-		
-		return; // Needed or it will bug out again.
-	}
-	
 	// Detect pauses and add them onto the pause timer.
 	if (is_paused == 1)
 	{
@@ -186,6 +151,52 @@ void Update(int is_paused)
 	
 	switch (current_script_state)
 	{	
+		case LSS_INIT: { // Initialize game logic
+			if (DidScriptStateChange()) { }
+			
+			tgr_levels = ParseLevelsFromFile("Data/Scripts/the-golden-rabbit/custom.tgr");
+			// Check if the current level has TGR data.		
+			
+			level_index = -1;
+			for (uint i = 0; i < tgr_levels.length(); i++)
+			{			
+				if (tgr_levels[i].level_name == GetCurrLevelRelPath())
+				{
+					level_index = i;
+					break;
+				}
+			}
+			
+			if (level_index == -1) // Level does not exist / is not valid.
+			{
+				current_script_state = LSS_DO_NOTHING;
+				Log(fatal, "LSS_INIT -> LSS_DO_NOTHING");
+			}
+			else
+			{
+				// Spawn the rabbit to the first location.
+				rabbit_statue_id = CreateObject("Data/Objects/therium/rabbit_statue/rabbit_statue_1.xml", true);
+				
+				Object@ statue = ReadObjectFromID(rabbit_statue_id);
+				statue.SetTranslation(tgr_levels[level_index].positions[0].statue);
+				statue.SetRotation(tgr_levels[level_index].positions[0].statue_rotation);
+				statue.SetScale(vec3(STATUE_SCALE));
+				statue.SetTint(vec3(1.0f, 0.621f, 0.0f) * 8.0f);
+				
+				// Set the level progress to 0.
+				level_progress = 0;
+			
+				UpdateCounterProgressText();
+			
+				current_script_state = LSS_PLAYER_IS_SEARCHING;
+				Log(fatal, "LSS_INIT -> LSS_PLAYER_IS_SEARCHING");
+				
+				current_counter_state = GCS_SLIDING_IN;
+				Log(fatal, "GCS_HIDDEN -> GCS_SLIDING_IN");
+			}
+		} break;
+	
+	
 		case LSS_PLAYER_IS_SEARCHING: { // Player is searching for the statue.
 			if (DidScriptStateChange()) { }
 			
@@ -213,6 +224,8 @@ void Update(int is_paused)
 						vec3(0.0f),
 						vec3(1.0f, 0.84f, 0.0f) * 6.0f
 					);
+					
+					PlaySound("Data/Sounds/the-golden-rabbit/collect.wav");
 				}
 			
 				// Reset the timer when the next state will start (if it wasn't the last statue).
@@ -226,7 +239,6 @@ void Update(int is_paused)
 				if (current_counter_state == GCS_HIDDEN) current_counter_state = GCS_SLIDING_IN;
 			}
 			
-			
 			Object@ statue = ReadObjectFromID(rabbit_statue_id);
 			statue.SetEnabled(false);
 				
@@ -234,25 +246,17 @@ void Update(int is_paused)
 			if (level_progress == int(tgr_levels[level_index].positions.length()))
 			{
 				// It was in fact the last. Show the mist and show win animation.
-				// We are using level_progress -1 because the progress jumped further already.
-				// And it looks much cleaner than tgr_levels[level_index].positions.length() - 1
-				MakeParticle(
-					"Data/Particles/the-golden-rabbit/statue_mist.xml",
-					vec3(tgr_levels[level_index].positions[level_progress - 1].statue),
-					vec3(0.0f),
-					vec3(1.0f, 0.0f, 0.0f) * 6.0f
-				);
-				
 				current_script_state = LSS_ALL_STATUES_FOUND;
 				Log(fatal, "LSS_STATUE_WAS_FOUND -> LSS_ALL_STATUES_FOUND");
 			}
 			else
-			{
+			{			
 				// It was not the last statue. Advance to the next one after one second.
 				if (GetLevelTime() - before_preview_fade_timestamp >= 1.0f)
 				{
 					statue.SetEnabled(true);
 					statue.SetTranslation(tgr_levels[level_index].positions[level_progress].statue);
+					statue.SetRotation(tgr_levels[level_index].positions[level_progress].statue_rotation);
 					
 					MakeParticle(
 						"Data/Particles/the-golden-rabbit/statue_mist.xml",
@@ -295,7 +299,12 @@ void Update(int is_paused)
 					preview_running = true;
 					
 					old_camera_position = camera.GetPos();
-					old_camera_facing = camera.GetFacing();					
+					old_camera_facing = camera.GetFacing();
+					
+					MovementObject@ player = ReadCharacterID(player_id);
+					stored_velocity = player.velocity;
+					player.static_char = true;
+					
 				}
 				
 				UpdateCameraAndListenerToLookAtStatue();
@@ -356,6 +365,11 @@ void Update(int is_paused)
 				{
 					preview_fade_mode_switched = true;
 					preview_running = false;
+					
+					
+					MovementObject@ player = ReadCharacterID(player_id);
+					player.static_char = false;
+					player.velocity = stored_velocity;					
 				}
 				
 				float alpha = 1.0f - ((GetLevelTime() - preview_fade_timestamp) - (PREVIEW_FADE_DURATION / 2.0f)) / (PREVIEW_FADE_DURATION / 2.0f);
@@ -372,9 +386,27 @@ void Update(int is_paused)
 		
 		
 		case LSS_ALL_STATUES_FOUND: { // All statues have just been found. Win.
-			if (DidScriptStateChange()) { }
+			if (DidScriptStateChange())
+			{
+				// We are using level_progress -1 because the progress jumped further already.
+				// And it looks much cleaner than tgr_levels[level_index].positions.length() - 1
+				MakeParticle(
+					"Data/Particles/the-golden-rabbit/statue_mist.xml",
+					vec3(tgr_levels[level_index].positions[level_progress - 1].statue),
+					vec3(0.0f),
+					vec3(1.0f, 0.0f, 0.0f) * 6.0f
+				);
+				
+				PlaySound("Data/Sounds/the-golden-rabbit/cheer.wav");
+			}
 		
-		} break;	
+		} break;
+		
+		
+		case LSS_DO_NOTHING: { // Do nothing.
+			if (DidScriptStateChange()) { }
+			
+		} break;
 	}
 	
 	switch (current_counter_state)
@@ -399,17 +431,28 @@ void Update(int is_paused)
 			if (GetLevelTime() - counter_slide_timestamp <= COUNTER_SLIDE_DURATION)
 			{
 				float percentage = (GetLevelTime() - counter_slide_timestamp) / COUNTER_SLIDE_DURATION;
-			
+				
+				// We are using 1.001 the length of the GUI because if we only use 1.0
+				// then the counter gui might leave a gap between itself and the window frame.
+				
 				gui.getMain().moveElement(
 					counter_container.getName(),
 					vec2(
-						gui.getMain().getSizeX() - (counter_container.getSizeX() - COUNTER_GUI_DISTANCE_FROM_RIGHT) * percentage,
+						1.001f * gui.getMain().getSizeX() - (counter_container.getSizeX() - COUNTER_GUI_DISTANCE_FROM_RIGHT) * percentage,
 						gui.getMain().getSizeY() - counter_container.getSizeY() - COUNTER_GUI_DISTANCE_FROM_BOTTOM
 					)
 				);
 			}
 			else
 			{
+				gui.getMain().moveElement(
+					counter_container.getName(),
+					vec2(
+						1.001f * gui.getMain().getSizeX() - (counter_container.getSizeX() - COUNTER_GUI_DISTANCE_FROM_RIGHT),
+						gui.getMain().getSizeY() - counter_container.getSizeY() - COUNTER_GUI_DISTANCE_FROM_BOTTOM
+					)
+				);
+			
 				current_counter_state = GCS_SHOWING;
 				Log(fatal, "GCS_SLIDING_IN -> GCS_SHOWING");
 			}
@@ -444,11 +487,11 @@ void Update(int is_paused)
 			if (GetLevelTime() - counter_slide_timestamp <= COUNTER_SLIDE_DURATION)
 			{
 				float percentage = (GetLevelTime() - counter_slide_timestamp) / COUNTER_SLIDE_DURATION;
-				
+								
 				gui.getMain().moveElement(
 					counter_container.getName(),
 					vec2(
-						gui.getMain().getSizeX() - (counter_container.getSizeX() - COUNTER_GUI_DISTANCE_FROM_RIGHT) * (1.0f - percentage),
+						1.001f * gui.getMain().getSizeX() - (counter_container.getSizeX() - COUNTER_GUI_DISTANCE_FROM_RIGHT) * (1.0f - percentage),
 						gui.getMain().getSizeY() - counter_container.getSizeY() - COUNTER_GUI_DISTANCE_FROM_BOTTOM
 					)
 				);
@@ -469,25 +512,45 @@ void Update(int is_paused)
 
 void ReceiveMessage(string message)
 {
-	if (message == "reset")
+	if (message == "post_reset")
 	{
-		// Why is this bool set and checked in Update?
-		// The current Update call will be interrupted and ReceiveMessage will be called.
-		// If we directly run the reset routine, the running instance of Update will still have the old values
-		// and the script will experience bugs. So queue an update here, and check on Update().
-		
-		reset_level_queued = true;
+		PostScriptReload(); // REPLACE WITH CORRECT RESET ROUTINE.
 	}
 }
 
 void DrawGUI()
 {
-	if (level_index != -1) gui.render();
+	switch (current_script_state)
+	{
+		case LSS_FADE_TO_STATUE:
+		case LSS_FADE_TO_PLAYER: {
+			gui.render();
+			return;
+		}
+	}
+	
+	switch (current_counter_state)
+	{
+		case GCS_SLIDING_IN:
+		case GCS_SHOWING:
+		case GCS_SLIDING_OUT: {
+			gui.render();
+			return;
+		}
+	}
 }
 
-bool HasFocus()
+void Menu()
 {
-	return false;
+	if (ImGui_BeginMenu("The Golden Rabbit"))
+	{
+		ImGui_AlignTextToFramePadding();
+		ImGui_TextColored(HexColor("#FFD700"), "The Golden Rabbit");
+	
+		// just a template for now
+	
+		ImGui_EndMenu();
+	}
 }
 
 void SetWindowDimensions(int width, int height)
@@ -510,6 +573,7 @@ bool DialogueCameraControl()
 
 void UpdateCameraAndListenerToLookAtStatue()
 {
+	camera.SetFOV(90);
 	camera.SetPos(tgr_levels[level_index].positions[level_progress].camera);
 	camera.LookAt(tgr_levels[level_index].positions[level_progress].statue);
 	UpdateListener(tgr_levels[level_index].positions[level_progress].camera, vec3(0.0f), camera.GetFacing(), camera.GetUpVector());

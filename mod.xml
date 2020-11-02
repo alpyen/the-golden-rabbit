@@ -5,12 +5,14 @@
 	<Category>Mod</Category>
 	<Author>_Ins4ne_ (alpines)</Author>
 	<Description>
-		DON'T FORGET TO ADD A DESCRIPTION!
+		The myterious Golden Rabbit is hiding himself from unwanted treasure hunters!
+		Are you able to find all of his secret hiding places throughout the levels?
 	</Description>
 	<Version>1.0.0</Version>
 	<Thumbnail>Data/Images/the-golden-rabbit/mod_thumb.jpg</Thumbnail>
 	<PreviewImage>Data/Images/the-golden-rabbit/mod_full.jpg</PreviewImage>
-	<Tag>Treasure Hunt</Tag>
+	<Tag>The Golden Rabbit</Tag>
+	<Tag>Treasure Hunting</Tag>
 	<Tag>Scripting</Tag>
 	<SupportedVersion>*</SupportedVersion>
 	<NeedsRestart>false</NeedsRestart>

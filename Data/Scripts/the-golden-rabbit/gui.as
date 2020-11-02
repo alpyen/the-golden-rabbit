@@ -7,7 +7,7 @@ IMImage@ rabbit_statue_image;
 IMText@ level_progress_text;
 
 const float COUNTER_GUI_DISTANCE_FROM_RIGHT = 0.0f;
-const float COUNTER_GUI_DISTANCE_FROM_BOTTOM = 300.0f;
+const float COUNTER_GUI_DISTANCE_FROM_BOTTOM = 400.0f;
 const float COUNTER_GUI_LEFT_RIGHT_MARGIN = 50.0f;
 const float COUNTER_GUI_TOP_BOTTOM_MARGIN = 10.0f;
 
@@ -23,12 +23,12 @@ void UpdateCounterProgressText()
 	
 	gui.update();
 	
-	float max_width = counter_container.getSizeX() - 3.0f * COUNTER_GUI_LEFT_RIGHT_MARGIN - rabbit_statue_image.getSizeX();
+	float max_text_width = counter_container.getSizeX() - 3.0f * COUNTER_GUI_LEFT_RIGHT_MARGIN - rabbit_statue_image.getSizeX();
 	
 	counter_container.moveElement(
 		level_progress_text.getName(),
 		vec2(
-			COUNTER_GUI_LEFT_RIGHT_MARGIN * 2.0f + rabbit_statue_image.getSizeX() + (max_width - level_progress_text.getSizeX()) / 2.0f,
+			COUNTER_GUI_LEFT_RIGHT_MARGIN * 2.0f + rabbit_statue_image.getSizeX() + (max_text_width - level_progress_text.getSizeX()) / 2.0f,
 			(counter_container.getSizeY() - level_progress_text.getSizeY()) / 2.0f
 		)
 	);
@@ -44,28 +44,10 @@ void RefreshRabbitStatueAnimation()
 	rabbit_statue_image.scaleToSizeY(COUNTER_GUI_RABBIT_STATUE_HEIGHT);
 }
 
-string GetMaxWidthLevelProgressTextString()
-{
-	string max_width_string = "";
-	
-	if (level_index != -1)
-	{
-		int unary_length = int(ceil(float(tgr_levels[level_index].positions.length()) / 10.0f));
-		for (int i = 0; i < unary_length; i++)
-		{
-			max_width_string += "0";
-		}
-		
-		max_width_string = max_width_string + " / " + max_width_string;
-	}
-	
-	return max_width_string;
-}
-
 void BuildGUI()
 {
 	@gui = CreateIMGUI();
-	
+
 	gui.clear();
 	gui.setup();
 	
@@ -95,12 +77,11 @@ void BuildGUI()
 	// We need the widest string possible in the level, otherwise if we start with a smaller string,
 	// then the text will be off-balance and we need to resize everything which might mess with our sliding in animation.
 	// So we just set the max width and if we set a smaller width later, we just move it to the center.
-	@level_progress_text = IMText(GetMaxWidthLevelProgressTextString(), FontSetup("Underdog-Regular", int(rabbit_statue_image.getSizeY() * 0.85f), vec4(1.0f), true));
+	@level_progress_text = IMText("88 / 88", FontSetup("Underdog-Regular", int(rabbit_statue_image.getSizeY() * 0.85f), vec4(1.0f), true));
 	counter_container.addFloatingElement(level_progress_text, "level_progress_text", vec2(0.0f), 4);
 	
-	// We added the items beforehand and update now, because we need the sizes of the controls for good arrangement.
-	// If you don't update, then you have to hardcode these values, and that's a no no.
 	gui.update();
+	
 	
 	counter_container.setSize(
 		vec2(
@@ -117,19 +98,22 @@ void BuildGUI()
 	);
 	
 	counter_background_image.setSize(counter_container.getSize());
-
+		
 	counter_container.moveElement(
 		rabbit_statue_image.getName(),
 		vec2(COUNTER_GUI_LEFT_RIGHT_MARGIN, COUNTER_GUI_TOP_BOTTOM_MARGIN)
 	);
 	
-	// Set the correct starting values!
-	level_progress_text.setText("0 / " + tgr_levels[level_index].positions.length());
+	float max_text_width = counter_container.getSizeX() - 3.0f * COUNTER_GUI_LEFT_RIGHT_MARGIN - rabbit_statue_image.getSizeX();
+	
 	counter_container.moveElement(
 		level_progress_text.getName(),
-		vec2(COUNTER_GUI_LEFT_RIGHT_MARGIN * 2.0f + rabbit_statue_image.getSizeX(), (counter_container.getSizeY() - level_progress_text.getSizeY()) / 2.0f)
+		vec2(
+			COUNTER_GUI_LEFT_RIGHT_MARGIN * 2.0f + rabbit_statue_image.getSizeX() + (max_text_width - level_progress_text.getSizeX()) / 2.0f,
+			(counter_container.getSizeY() - level_progress_text.getSizeY()) / 2.0f
+		)
 	);
-
+	
 	counter_container.setVisible(false);
 	for (uint i = 0; i < counter_container.getFloatingContents().length(); i++)
 		counter_container.getFloatingContents()[i].setVisible(false);
