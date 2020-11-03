@@ -8,19 +8,12 @@ Write README.md
 Implement messag reset (status preview running = false etc) only resetting everything for now because devphase
 Dying in a level with checkpoints should not reset the statue to the very first position.
 
-make the mod's own level overridable
-
 
 Fix animation to 36 frames (0dg, 10dg, .... 350dg), it's 35 frames now.
 Don't forget to adjust the loop limit to more one!!
 
 
 camera might glitch around during preview and jumping into the editor with f1
-
-
-Add directory scanning for .tgr files.
-Add automatic parsing for the scanned files.
-
 
 add mod menu
 

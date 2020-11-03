@@ -1,5 +1,6 @@
 {
-	"levels" : [
+	"overridable": true,
+	"levels": [
 		{
 			"level_name" : "Data/Levels/the-golden-rabbit/testlevel.xml",
 			"positions" : 

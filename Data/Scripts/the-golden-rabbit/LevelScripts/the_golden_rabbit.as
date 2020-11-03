@@ -154,7 +154,8 @@ void Update(int is_paused)
 		case LSS_INIT: { // Initialize game logic
 			if (DidScriptStateChange()) { }
 			
-			tgr_levels = ParseLevelsFromFile("Data/Scripts/the-golden-rabbit/custom.tgr");
+			// tgr_levels = ParseLevelsFromFile("Data/Scripts/the-golden-rabbit/custom.tgr");
+			tgr_levels = ScanAndParseFiles();
 			// Check if the current level has TGR data.		
 			
 			level_index = -1;

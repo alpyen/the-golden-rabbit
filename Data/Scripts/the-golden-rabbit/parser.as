@@ -1,32 +1,67 @@
-array<TGRLevel@> ParseLevelsFromFile(string path)
+array<TGRLevel@> ScanAndParseFiles()
 {
-	array<TGRLevel@> new_levels;
+	array<TGRLevel@> levels;
 	
+	// ParseLevelsFromFile(levels, "Data/TheGoldenRabbit/the-golden-rabbit/custom.tgr");
+	
+	array<ModID>@ mods = GetActiveModSids();
+	
+	for (uint i = 0; i < mods.length(); i++)
+	{
+		// So we save some time scanning files, because the core mods will have no TGR data.
+		if (ModIsCore(mods[i])) continue;
+		
+		string mod_id = ModGetID(mods[i]);
+		
+		if (FileExists("Data/TheGoldenRabbit/" + mod_id + "/custom.tgr"))
+		{
+			LogSuccess("Mod '" + ModGetName(mods[i]) + "' has TGR data. Trying to parse.");
+			
+			ParseLevelsFromFile(levels, "Data/TheGoldenRabbit/" + mod_id + "/custom.tgr");
+		}
+		else
+		{
+			LogWarning("Mod '" + ModGetName(mods[i]) + "' has no TGR data.");
+		}
+	}
+	
+	return levels;
+}
+
+void ParseLevelsFromFile(array<TGRLevel@>& inout new_levels, string path)
+{
 	JSON json;
 	if (!json.parseFile(path))
 	{
 		LogError("Could not parse file: " + path);
-		return new_levels;
+		return;
 	}
 	
-	if (json.getRoot().getMemberNames().length() != 1)
+	if (json.getRoot().getMemberNames().length() < 1 || json.getRoot().getMemberNames().length() > 2)
 	{
-		LogError("Root level has more than one element.");
-		return new_levels;
+		LogError("Root level has no or more than 2 elements.");
+		return;
 	}
 	
-	if (json.getRoot().getMemberNames()[0] != "levels")
+	if (json.getRoot().getMemberNames().length() == 2 && json.getRoot().getMemberNames().find("overridable") < 0)
+	{
+		LogError("Root level has two elements, but second isn't 'overridable'.");
+		return;
+	}
+	
+	if (json.getRoot().getMemberNames().find("levels") < 0)
 	{
 		LogError("Could not find 'levels' element in: " + path);
-		return new_levels;
+		return;
 	}
 	
+	bool overridable = (json.getRoot().getMemberNames().find("overridable") > 0) ? json.getRoot()["overridable"].asBool() : false;
 	JSONValue levels = json.getRoot()["levels"];
 	
 	if (!levels.isArray())
 	{
 		LogError("'levels' element is incorrect. Not an array.");
-		return new_levels;
+		return;
 	}
 	
 	// Iterate over each level
@@ -59,7 +94,7 @@ array<TGRLevel@> ParseLevelsFromFile(string path)
 		
 		for (uint i = 0; i < new_levels.length(); i++)
 		{
-			if (new_levels[i].level_name == current_level["level_name"].asString())
+			if (new_levels[i].level_name == current_level["level_name"].asString() && !new_levels[i].overridable)
 			{
 				level_already_added = true;
 				break;
@@ -68,12 +103,13 @@ array<TGRLevel@> ParseLevelsFromFile(string path)
 		
 		if (level_already_added)
 		{
-			LogWarning("Level '" + current_level["level_name"].asString() + "' has already been parsed. Skipping Level. [" + path + "]");
+			LogWarning("Level '" + current_level["level_name"].asString() + "' has already been parsed.");
 			continue;
 		}
 		
 		// Level was not added, so parse it!
 		TGRLevel new_level;
+		new_level.overridable = overridable;
 		new_level.level_name = current_level["level_name"].asString();
 		
 		JSONValue positions = current_level["positions"];
@@ -127,8 +163,6 @@ array<TGRLevel@> ParseLevelsFromFile(string path)
 	}
 	
 	LogSuccess("File was parsed completely! [" + path + "]");
-	
-	return new_levels;
 }
 
 void LogError(string message)
