@@ -1,3 +1,16 @@
+JSONValue ReadLevelJsonFromMod(string mod_id)
+{
+	JSONValue level_json;
+	
+	if (!FileExists("Data/TheGoldenRabbit/" + mod_id + "/custom.tgr"))
+		return level_json;
+		
+	array<TGRLevel@> levels_from_mod;
+	ParseLevelsFromFile(levels_from_mod, "Data/TheGoldenRabbit/" + mod_id + "/custom.tgr");
+	
+	return level_json;
+}
+
 array<TGRLevel@> ScanAndParseFiles()
 {
 	array<TGRLevel@> levels;
@@ -91,12 +104,15 @@ void ParseLevelsFromFile(array<TGRLevel@>& inout new_levels, string path)
 		// if so, warn the user and ignore the second instance.
 		
 		bool level_already_added = false;
+		bool override_level = false;
 		
 		for (uint i = 0; i < new_levels.length(); i++)
-		{
-			if (new_levels[i].level_name == current_level["level_name"].asString() && !new_levels[i].overridable)
+		{		
+			if (new_levels[i].level_name == current_level["level_name"].asString())
 			{
-				level_already_added = true;
+				if (new_levels[i].overridable) override_level = true;
+				else level_already_added = true;
+				
 				break;
 			}
 		}
@@ -116,26 +132,33 @@ void ParseLevelsFromFile(array<TGRLevel@>& inout new_levels, string path)
 		
 		bool position_invalid = false;
 		
+		if (positions.size() == 0)
+		{
+			LogWarning("Positions of level '" + new_level.level_name + "' is 0. Ignoring.");
+			continue;
+		}
+		
 		for (uint position_counter = 0; position_counter < positions.size(); position_counter++)
 		{
 			JSONValue current_position = positions[position_counter];
 			
 			if (current_position.getMemberNames().length() != 3)
 			{
-				LogWarning("Position index " + position_counter + " of the level'" + new_level.level_name + "' has more or less than 3 elements. Skipping Level. [" + path + "]");
+				LogWarning("Position index " + position_counter + " of the level'" + new_level.level_name + "' has more or less than 3 elements.");
 				position_invalid = true;
 				break;
 			}
 			else if (current_position.getMemberNames().find("camera") < 0 || current_position.getMemberNames().find("statue") < 0 || current_position.getMemberNames().find("statue_rotation") < 0)
 			{
-				LogWarning("Could not find element 'camera' or 'statue' at position index " + position_counter + " of the level'" + new_level.level_name + "'. Skipping Level. [" + path + "]");
+				LogWarning("Could not find element 'camera' or 'statue' at position index " + position_counter + " of the level'" + new_level.level_name + "'");
 				position_invalid = true;
 				break;
 			}
 			else if (current_position["camera"].size() != 3 || current_position["statue"].size() != 3)
 			{
-				LogWarning("Camera or Statue position at position index " + position_counter + " of the level '" + new_level.level_name + "' is invalid. [" + path + "]");
+				LogWarning("Camera or Statue position at position index " + position_counter + " of the level '" + new_level.level_name + "' is invalid.");
 				position_invalid = true;
+				break;
 			}
 			
 			JSONValue camera = current_position["camera"];
@@ -159,7 +182,23 @@ void ParseLevelsFromFile(array<TGRLevel@>& inout new_levels, string path)
 			continue;
 		}
 		
-		new_levels.insertLast(new_level);
+		if (override_level)
+		{
+			LogWarning("Level '" + new_level.level_name + "' was already added and is overridable. Overriding now.");
+		
+			for (uint i = 0; i < new_levels.length(); i++)
+			{
+				if (new_levels[i].level_name == new_level.level_name)
+				{
+					new_levels[i] = new_level;
+					break;
+				}
+			}
+		}
+		else
+		{
+			new_levels.insertLast(new_level);
+		}
 	}
 	
 	LogSuccess("File was parsed completely! [" + path + "]");

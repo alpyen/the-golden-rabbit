@@ -1,0 +1,217 @@
+const TextureAssetRef TEXTURE_ADD = LoadTexture("Data/Textures/the-golden-rabbit/UI/add.png");
+const TextureAssetRef TEXTURE_DELETE = LoadTexture("Data/Textures/the-golden-rabbit/UI/delete.png");
+const TextureAssetRef TEXTURE_UP = LoadTexture("Data/Textures/the-golden-rabbit/UI/up.png");
+const TextureAssetRef TEXTURE_DOWN = LoadTexture("Data/Textures/the-golden-rabbit/UI/down.png");
+const TextureAssetRef TEXTURE_REFRESH = LoadTexture("Data/Textures/the-golden-rabbit/UI/refresh.png");
+const TextureAssetRef TEXTURE_SAVE = LoadTexture("Data/Textures/the-golden-rabbit/UI/save.png");
+
+bool custom_editor_open = false;
+
+array<TGRLevel@> current_mod_levels;
+int current_mod_levels_index = 0; // WARNING; CHANGE LATER BACK TO -1 JUST FOR DEBUG
+
+array<string> mod_names;
+array<string> mod_ids;
+int selected_mod_name = 0;
+
+int selected_position = -1;
+
+void LssEditingLevel()
+{
+	if (selected_position != -1)
+	{
+		MoveCameraAndStatueToTargetLocation();
+	}
+	else
+	{
+	
+	}
+}
+
+void MoveCameraAndStatueToTargetLocation()
+{
+	if (!EditorModeActive())
+	{
+		Position@ preview_position = current_mod_levels[current_mod_levels_index].positions[selected_position];
+		
+		camera.SetPos(preview_position.camera);
+		camera.LookAt(preview_position.statue);
+		
+		preview_running = true;
+	}
+	else
+	{
+		preview_running = false;
+	}
+	
+	// Log(fatal, preview_position + "");
+}
+
+void OpenCustomEditor()
+{
+	if (custom_editor_open) return;
+
+	mod_names.resize(0);
+	mod_ids.resize(0);
+	
+	current_mod_levels.resize(0);
+	
+	array<ModID>@ mods = GetActiveModSids();
+	
+	for (uint i = 0; i < mods.length(); i++)
+	{
+		if (ModIsCore(mods[i]) || ModGetID(mods[i]) == "the-golden-rabbit") continue;
+		
+		mod_names.insertLast(ModGetName(mods[i]) + " [" + ModGetID(mods[i]) + "]");
+		mod_ids.insertLast(ModGetID(mods[i]));
+	}
+	
+	if (mods.length() == 0)
+	{
+		Log(error, "The Golden Rabbit: No usable mod found modifying .tgr files.");
+		return;
+	}
+	
+	custom_editor_open = true;
+	
+	current_script_state = LSS_EDITING_LEVEL;
+	current_counter_state = GCS_HIDDEN;
+	Log(fatal, "ScriptState -> " + LSS_EDITING_LEVEL + ", CounterState -> " + GCS_HIDDEN);
+	
+	SetModInLevelEditorGUI();
+}
+
+void CloseCustomEditor()
+{
+	selected_position = -1;
+	
+	current_script_state = LSS_INIT;
+	current_counter_state = GCS_HIDDEN;
+}
+
+void SetModInLevelEditorGUI()
+{
+	selected_position = -1;
+	current_mod_levels_index = -1;
+	
+	ParseLevelsFromFile(current_mod_levels, "Data/TheGoldenRabbit/" + mod_ids[selected_mod_name] + "/custom.tgr");
+	
+	for (uint i = 0; i < current_mod_levels.length(); i++)
+	{
+		if (current_mod_levels[i].level_name == GetCurrLevelRelPath())
+		{
+			current_mod_levels_index = i;
+			break;
+		}
+	}
+	
+	// Check if this level is already included in the mod, if not, add a placeholder.
+	if (current_mod_levels_index == -1)
+	{
+		TGRLevel add_level;
+		add_level.level_name = GetCurrLevelRelPath();
+		
+		current_mod_levels.insertLast(add_level);
+		current_mod_levels_index = current_mod_levels.length() - 1;
+	}
+}
+
+array<string> GetListBoxStringArrayFromPositions()
+{
+	array<string> items;
+	
+	array<Position@> positions = current_mod_levels[current_mod_levels_index].positions;
+	
+	for (uint i = 0; i < positions.length(); i++)
+	{
+		Position@ pos = positions[i];
+	
+		string entry = (i + 1)
+		+ " ["
+			+ formatFloat(pos.camera.x, "l", 0, 1) + ", "
+			+ formatFloat(pos.camera.y, "l", 0, 1) + ", "
+			+ formatFloat(pos.camera.z, "l", 0, 1)
+		+ "] ["
+			+ formatFloat(pos.statue.x, "l", 0, 1) + ", "
+			+ formatFloat(pos.statue.y, "l", 0, 1) + ", "
+			+ formatFloat(pos.statue.z, "l", 0, 1)
+		+ "] ["
+			+ formatFloat(pos.statue_rotation.x, "l", 0, 1) + ", "
+			+ formatFloat(pos.statue_rotation.y, "l", 0, 1) + ", "
+			+ formatFloat(pos.statue_rotation.z, "l", 0, 1) + ", "
+			+ formatFloat(pos.statue_rotation.w, "l", 0, 1)
+		+ "]";
+		
+		items.insertLast(entry);
+	}
+		
+	return items;
+}
+
+void DisplayLevelEditor()
+{
+	const vec2 GUI_SIZE(500.0f, 234.0f);
+
+	ImGui_SetNextWindowSize(GUI_SIZE, ImGuiSetCond_Always);
+	ImGui_SetNextWindowPos((screenMetrics.screenSize - GUI_SIZE) / 2.0f, ImGuiSetCond_FirstUseEver);
+	
+	if (ImGui_Begin("The Golden Rabbit - Level Editor", custom_editor_open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse) && !custom_editor_open)
+	{
+		CloseCustomEditor();
+	}
+		
+	ImGui_AlignTextToFramePadding();
+	
+	ImGui_Text("Save To Mod:");
+	ImGui_SameLine();
+	
+	ImGui_PushItemWidth(359.0f); int old_selected_mod_name = selected_mod_name;
+	if (ImGui_Combo("", selected_mod_name, mod_names) && selected_mod_name != old_selected_mod_name)
+	{
+		SetModInLevelEditorGUI();
+	}
+	ImGui_PopItemWidth();
+	
+	ImGui_PushItemWidth(450.0f); int old_selected_position = selected_position;
+	if (ImGui_ListBox(" ", selected_position, GetListBoxStringArrayFromPositions(), 10))
+	{
+		if (selected_position == old_selected_position)
+		{
+			// Deselect incase it was the same
+			selected_position = -1;
+		}
+		else
+		{
+			MoveCameraAndStatueToTargetLocation();
+		}
+	}
+	ImGui_PopItemWidth();
+	
+	ImGui_SetCursorPos(vec2(468.0f, 27.0f));
+	ImGui_ImageButton(TEXTURE_SAVE, vec2(16));
+	
+	ImGui_SetCursorPos(vec2(468.0f, 77.0f));
+	ImGui_ImageButton(TEXTURE_ADD, vec2(16));
+	
+	ImGui_SetCursorPos(vec2(468.0f, 102.0f));
+	ImGui_ImageButton(TEXTURE_DELETE, vec2(16));
+	
+	ImGui_SetCursorPos(vec2(468.0f, 127.0f));
+	if (ImGui_ImageButton(TEXTURE_REFRESH, vec2(16)))
+	{
+		if (selected_position != -1)
+		{
+			Position new_position(camera.GetPos(), vec3(0), quaternion(0));
+			
+			@current_mod_levels[current_mod_levels_index].positions[selected_position] = new_position;
+		}
+	}
+	
+	ImGui_SetCursorPos(vec2(468.0f, 177.0f));
+	ImGui_ImageButton(TEXTURE_UP, vec2(16));
+	
+	ImGui_SetCursorPos(vec2(468.0f, 202.0f));
+	ImGui_ImageButton(TEXTURE_DOWN, vec2(16));
+	
+	ImGui_End();
+}

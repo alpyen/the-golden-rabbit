@@ -1,6 +1,7 @@
 #include "the-golden-rabbit/tgrlevel.as"
 #include "the-golden-rabbit/parser.as"
 #include "the-golden-rabbit/gui.as"
+#include "the-golden-rabbit/editor.as"
 
 const float STATUE_SCALE = 0.36f;
 const float STATUE_TOUCHING_DISTANCE = 0.6f;
@@ -9,8 +10,6 @@ const float PREVIEW_DURATION = 2.0f;
 
 const float COUNTER_SLIDE_DURATION = 0.5f;
 const float COUNTER_DURATION = 5.0f;
-
-bool custom_editor_open = false;
 
 float last_pause_timestamp;
 float paused_time_in_level;
@@ -21,6 +20,7 @@ int level_progress = -1;
 
 int rabbit_statue_id = -1;
 int player_id = -1;
+vec3 stored_velocity;
 
 float before_preview_fade_timestamp;
 bool preview_fade_mode_switched = false;
@@ -41,7 +41,6 @@ LevelScriptState previous_script_state = LevelScriptState(-1);
 GuiCounterState current_counter_state = GuiCounterState(-1);
 GuiCounterState previous_counter_state = GuiCounterState(-1);
 
-vec3 stored_velocity;
 
 enum LevelScriptState
 {
@@ -52,7 +51,8 @@ enum LevelScriptState
 	LSS_LOOKING_AT_STATUE = 4,
 	LSS_FADE_TO_PLAYER = 5,
 	LSS_ALL_STATUES_FOUND = 6,
-	LSS_DO_NOTHING = 7
+	LSS_DO_NOTHING = 7,
+	LSS_EDITING_LEVEL = 8
 }
 
 enum GuiCounterState
@@ -76,9 +76,7 @@ void PostScriptReload()
 		
 		rabbit_statue_id = -1;
 	}
-	
-	custom_editor_open = false;
-	
+		
 	level_index = -1;
 	player_id = -1;
 	
@@ -112,6 +110,11 @@ void PostScriptReload()
 	Log(fatal, "-1 -> GCS_HIDDEN");
 	
 	BuildGUI();
+	
+	
+	custom_editor_open = false;
+	current_script_state = LSS_EDITING_LEVEL;
+	OpenCustomEditor();
 }
 
 void Init(string level_name)
@@ -174,6 +177,8 @@ void Update(int is_paused)
 			
 			if (level_index == -1) // Level does not exist / is not valid.
 			{
+				Log(fatal, "Level has no TGR data / or data is not valid.");
+			
 				current_script_state = LSS_DO_NOTHING;
 				Log(fatal, "LSS_INIT -> LSS_DO_NOTHING");
 			}
@@ -412,6 +417,26 @@ void Update(int is_paused)
 			if (DidScriptStateChange()) { }
 			
 		} break;
+		
+		case LSS_EDITING_LEVEL: { // Editing level. Despawn the rabbit spawned for the level.
+			if (DidScriptStateChange())
+			{
+				if (rabbit_statue_id != -1)
+				{
+					Log(warning, "Removing old statue [" + rabbit_statue_id + "]");
+					
+					if (ObjectExists(rabbit_statue_id))
+						DeleteObjectID(rabbit_statue_id);
+					
+					rabbit_statue_id = -1;
+				}
+			}
+			
+			// This state is set and unset in editor.as (OpenCustomEditor() & CloseCustomEditor()
+			
+			LssEditingLevel();
+			
+		} break;
 	}
 	
 	switch (current_counter_state)
@@ -531,14 +556,6 @@ void ReceiveMessage(string message)
 	}
 }
 
-const TextureAssetRef TEXTURE_ADD = LoadTexture("Data/Textures/the-golden-rabbit/UI/add.png");
-const TextureAssetRef TEXTURE_DELETE = LoadTexture("Data/Textures/the-golden-rabbit/UI/delete.png");
-const TextureAssetRef TEXTURE_UP = LoadTexture("Data/Textures/the-golden-rabbit/UI/up.png");
-const TextureAssetRef TEXTURE_DOWN = LoadTexture("Data/Textures/the-golden-rabbit/UI/down.png");
-const TextureAssetRef TEXTURE_CANCEL = LoadTexture("Data/Textures/the-golden-rabbit/UI/cancel.png");
-const TextureAssetRef TEXTURE_SAVE = LoadTexture("Data/Textures/the-golden-rabbit/UI/save.png");
-
-
 void DrawGUI()
 {
 	if (custom_editor_open) DisplayLevelEditor();
@@ -571,7 +588,7 @@ void Menu()
 		ImGui_AlignTextToFramePadding();
 		ImGui_TextColored(HexColor("#FFD700"), "The Golden Rabbit Editor");
 		
-		if (ImGui_Button("Open TGR Level Editor")) custom_editor_open = true;
+		if (ImGui_Button("Open TGR Level Editor")) OpenCustomEditor();
 		
 		ImGui_EndMenu();
 	}
@@ -645,53 +662,4 @@ void UpdatePlayerID()
 float GetLevelTime()
 {
 	return ImGui_GetTime() - paused_time_in_level;
-}
-
-void DisplayLevelEditor()
-{
-	const vec2 GUI_SIZE(500.0f, 234.0f);
-
-	ImGui_SetNextWindowSize(GUI_SIZE, ImGuiSetCond_Always);
-	ImGui_SetNextWindowPos((screenMetrics.screenSize - GUI_SIZE) / 2.0f, ImGuiSetCond_FirstUseEver);
-	
-	ImGui_Begin("The Golden Rabbit - Level Editor", custom_editor_open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
-		
-	ImGui_AlignTextToFramePadding();
-	
-	ImGui_Text("Save To Mod:");
-	ImGui_SameLine();
-	
-	int selected = 0;
-	array<string> items = { "The Golden Rabbit [the-golden-rabbit]" };
-	ImGui_PushItemWidth(359.0f);
-	ImGui_Combo("", selected, items);
-	ImGui_PopItemWidth();
-	
-	int current = 0;
-	array<string> items_pos = { "10 [1.65, 2.12, 3.78][2.51, 3.32, 4.51][5.45, 4.65, 2.23, 8.64]" };
-	items_pos.insertLast("2 [ 1, 2, 3 ] [ 2, 3, 4 ] [ 5, 4, 2, 6 ]");
-	
-	ImGui_PushItemWidth(450.0f);
-	ImGui_ListBox(" ", current, items_pos, 10);
-	ImGui_PopItemWidth();
-	
-	ImGui_SetCursorPos(vec2(468.0f, 27.0f));
-	ImGui_ImageButton(TEXTURE_SAVE, vec2(16));
-	
-	ImGui_SetCursorPos(vec2(468.0f, 77.0f));
-	ImGui_ImageButton(TEXTURE_ADD, vec2(16));
-	
-	ImGui_SetCursorPos(vec2(468.0f, 102.0f));
-	ImGui_ImageButton(TEXTURE_DELETE, vec2(16));
-	
-	ImGui_SetCursorPos(vec2(468.0f, 127.0f));
-	ImGui_ImageButton(TEXTURE_CANCEL, vec2(16));
-	
-	ImGui_SetCursorPos(vec2(468.0f, 177.0f));
-	ImGui_ImageButton(TEXTURE_UP, vec2(16));
-	
-	ImGui_SetCursorPos(vec2(468.0f, 202.0f));
-	ImGui_ImageButton(TEXTURE_DOWN, vec2(16));
-	
-	ImGui_End();
 }

@@ -31,10 +31,10 @@
     <DomeTexture>Data/Textures/skies/blue3_painted.tga_converted.dds</DomeTexture>
     <SunAngularRad>0.153056</SunAngularRad>
     <SunColorAngle>353.589</SunColorAngle>
-    <RayToSun r0="0.121363" r1="0.062051" r2="0.990667" />
+    <RayToSun r0="0.156009" r1="0.974772" r2="0.159625" />
 </Sky>
 <ActorObjects>
-    <CameraObject t0="9.58331" t1="7.29564" t2="-12.9901" s0="1" s1="1" s2="1" q0="0.106211" q1="-0.882913" q2="0.24139" q3="0.388479" euler_x="-2.60783" euler_y="-0.829008" euler_z="3.14159" id="0">
+    <CameraObject t0="2.64149" t1="1.12996" t2="-19.6513" s0="1" s1="1" s2="1" q0="0.00595085" q1="-0.993791" q2="0.0663784" q3="0.0890941" euler_x="-3.0082" euler_y="-0.178823" euler_z="3.14159" id="0">
         <parameters />
     </CameraObject>
     <EnvObject t0="0.0447941" t1="-0.821069" t2="0" s0="19.247" s1="0.569728" s2="19.1044" q0="0" q1="0" q2="0" q3="1" euler_x="0" euler_y="0" euler_z="0" id="1" color_r="0" color_g="0" color_b="0" overbright="0" type_file="Data/Objects/primitives/edged_cube.xml">

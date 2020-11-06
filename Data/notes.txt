@@ -1,8 +1,29 @@
+Changelog:
+
+Fixed Bug where levels with empty checkpoints would be parsed and resulted in a outofbounds exception.
+Fixed Bug where overriding levels would not work (Levels were inserted into the array rather than replacing the overridable ones).
+
+LevelEditor, implement:
+	Move Object up
+	Move Object down
+	Refresh Object (vec3(0) for statue pos/dir rightnow)
+	Save To Mod
+	Add New Position
+	Delete Position
+	
+	Spawn Rabbit and place it when clicked on position
+
+Change state when level editor is open
+despawn the rabbit which was spawned for completing the level (if there was one) and spawn one for the editor
+
 ToDo-List:
 
 Complete mod.xml
 
 Write README.md
+
+
+Add and finish Level Editor
 
 
 Implement messag reset (status preview running = false etc) only resetting everything for now because devphase
@@ -14,9 +35,6 @@ Don't forget to adjust the loop limit to more one!!
 
 
 camera might glitch around during preview and jumping into the editor with f1
-
-add mod menu
-
 
 Add automatic/easy way of creating new .tgr files.
 

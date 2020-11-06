@@ -1,6 +1,6 @@
 class TGRLevel
 {
-	bool overridable;
+	bool overridable = false;
 	string level_name;
 	array<Position@> positions;
 }
