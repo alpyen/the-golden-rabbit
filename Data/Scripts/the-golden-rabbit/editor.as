@@ -7,8 +7,8 @@ const TextureAssetRef TEXTURE_SAVE = LoadTexture("Data/Textures/the-golden-rabbi
 
 bool custom_editor_open = false;
 
-array<TGRLevel@> current_mod_levels;
-int current_mod_levels_index = 0; // WARNING; CHANGE LATER BACK TO -1 JUST FOR DEBUG
+array<TGRLevel@> mod_levels;
+int mod_levels_index = 0; // WARNING; CHANGE LATER BACK TO -1 JUST FOR DEBUG
 
 array<string> mod_names;
 array<string> mod_ids;
@@ -16,35 +16,64 @@ int selected_mod_name = 0;
 
 int selected_position = -1;
 
+int editor_statue_id = -1;
+
 void LssEditingLevel()
 {
+	if (DidScriptStateChange())
+	{
+		DeleteLevelStatue();
+
+		// Spawn the editor statue.
+		editor_statue_id = CreateObject("Data/Objects/therium/rabbit_statue/rabbit_statue_1.xml", true);
+				
+		Object@ statue = ReadObjectFromID(editor_statue_id);
+		statue.SetSelectable(true);
+		// statue.SetTranslatable(true);
+		// statue.SetRotatable(true);
+		// statue.SetScalable(true);
+		statue.SetScale(vec3(STATUE_SCALE));
+		statue.SetTint(vec3(1.0f, 0.621f, 0.0f) * 8.0f);
+	}
+	
+	Log(fatal, "preview="+preview_running);
+		
 	if (selected_position != -1)
 	{
-		MoveCameraAndStatueToTargetLocation();
-	}
-	else
-	{
-	
-	}
-}
-
-void MoveCameraAndStatueToTargetLocation()
-{
-	if (!EditorModeActive())
-	{
-		Position@ preview_position = current_mod_levels[current_mod_levels_index].positions[selected_position];
-		
-		camera.SetPos(preview_position.camera);
-		camera.LookAt(preview_position.statue);
-		
+		// preview_running has to be set even when EditorMode is active, although the camera isn't positioned,
+		// because otherwise the game will twitch rapidly between both positions.
+		// This only happens if preview_running is executed after EditorModeActive and after setting the camera position.
+		// However, this only happens once. On the next preview this does not happen anymore.
 		preview_running = true;
+		
+		MoveCameraAndStatueToTargetLocation();
 	}
 	else
 	{
 		preview_running = false;
 	}
+}
+
+void DeleteEditorStatue()
+{
+	if (editor_statue_id != -1)
+	{
+		if (ObjectExists(editor_statue_id)) DeleteObjectID(editor_statue_id);
+		editor_statue_id = -1;
+	}
+}
+
+void MoveCameraAndStatueToTargetLocation()
+{	
+	if (!EditorModeActive())
+	{
+		Position@ preview_position = mod_levels[mod_levels_index].positions[selected_position];
+
+		camera.SetPos(preview_position.camera);
+		camera.LookAt(preview_position.statue);
+		
+	}
 	
-	// Log(fatal, preview_position + "");
 }
 
 void OpenCustomEditor()
@@ -54,7 +83,7 @@ void OpenCustomEditor()
 	mod_names.resize(0);
 	mod_ids.resize(0);
 	
-	current_mod_levels.resize(0);
+	mod_levels.resize(0);
 	
 	array<ModID>@ mods = GetActiveModSids();
 	
@@ -92,27 +121,27 @@ void CloseCustomEditor()
 void SetModInLevelEditorGUI()
 {
 	selected_position = -1;
-	current_mod_levels_index = -1;
+	mod_levels_index = -1;
 	
-	ParseLevelsFromFile(current_mod_levels, "Data/TheGoldenRabbit/" + mod_ids[selected_mod_name] + "/custom.tgr");
+	ParseLevelsFromFile(mod_levels, "Data/TheGoldenRabbit/" + mod_ids[selected_mod_name] + "/custom.tgr");
 	
-	for (uint i = 0; i < current_mod_levels.length(); i++)
+	for (uint i = 0; i < mod_levels.length(); i++)
 	{
-		if (current_mod_levels[i].level_name == GetCurrLevelRelPath())
+		if (mod_levels[i].level_name == GetCurrLevelRelPath())
 		{
-			current_mod_levels_index = i;
+			mod_levels_index = i;
 			break;
 		}
 	}
 	
 	// Check if this level is already included in the mod, if not, add a placeholder.
-	if (current_mod_levels_index == -1)
+	if (mod_levels_index == -1)
 	{
 		TGRLevel add_level;
 		add_level.level_name = GetCurrLevelRelPath();
 		
-		current_mod_levels.insertLast(add_level);
-		current_mod_levels_index = current_mod_levels.length() - 1;
+		mod_levels.insertLast(add_level);
+		mod_levels_index = mod_levels.length() - 1;
 	}
 }
 
@@ -120,7 +149,7 @@ array<string> GetListBoxStringArrayFromPositions()
 {
 	array<string> items;
 	
-	array<Position@> positions = current_mod_levels[current_mod_levels_index].positions;
+	array<Position@> positions = mod_levels[mod_levels_index].positions;
 	
 	for (uint i = 0; i < positions.length(); i++)
 	{
@@ -178,11 +207,15 @@ void DisplayLevelEditor()
 		if (selected_position == old_selected_position)
 		{
 			// Deselect incase it was the same
-			selected_position = -1;
+			selected_position = -1;		
 		}
 		else
 		{
-			MoveCameraAndStatueToTargetLocation();
+			Position@ preview_position = mod_levels[mod_levels_index].positions[selected_position];
+			
+			Object@ statue = ReadObjectFromID(editor_statue_id);
+			statue.SetTranslation(preview_position.statue);
+			statue.SetRotation(preview_position.statue_rotation);
 		}
 	}
 	ImGui_PopItemWidth();
@@ -203,7 +236,7 @@ void DisplayLevelEditor()
 		{
 			Position new_position(camera.GetPos(), vec3(0), quaternion(0));
 			
-			@current_mod_levels[current_mod_levels_index].positions[selected_position] = new_position;
+			@mod_levels[mod_levels_index].positions[selected_position] = new_position;
 		}
 	}
 	

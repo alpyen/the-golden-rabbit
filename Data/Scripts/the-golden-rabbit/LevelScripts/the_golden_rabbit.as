@@ -41,7 +41,6 @@ LevelScriptState previous_script_state = LevelScriptState(-1);
 GuiCounterState current_counter_state = GuiCounterState(-1);
 GuiCounterState previous_counter_state = GuiCounterState(-1);
 
-
 enum LevelScriptState
 {
 	LSS_INIT = 0,
@@ -67,15 +66,7 @@ void PostScriptReload()
 {
 	Log(fatal, "PostScriptReload(); ============== RESETTING SCRIPT ==============");
 	
-	if (rabbit_statue_id != -1)
-	{
-		Log(warning, "Removing old statue [" + rabbit_statue_id + "]");
-		
-		if (ObjectExists(rabbit_statue_id))
-			DeleteObjectID(rabbit_statue_id);
-		
-		rabbit_statue_id = -1;
-	}
+	DeleteLevelStatue();
 		
 	level_index = -1;
 	player_id = -1;
@@ -159,9 +150,12 @@ void Update(int is_paused)
 	switch (current_script_state)
 	{	
 		case LSS_INIT: { // Initialize game logic
-			if (DidScriptStateChange()) { }
+			if (DidScriptStateChange())
+			{
+				preview_running = false;
+				DeleteEditorStatue(); // In case we jump from the tgr editor to playing.
+			}
 			
-			// tgr_levels = ParseLevelsFromFile("Data/Scripts/the-golden-rabbit/custom.tgr");
 			tgr_levels = ScanAndParseFiles();
 			// Check if the current level has TGR data.		
 			
@@ -419,19 +413,6 @@ void Update(int is_paused)
 		} break;
 		
 		case LSS_EDITING_LEVEL: { // Editing level. Despawn the rabbit spawned for the level.
-			if (DidScriptStateChange())
-			{
-				if (rabbit_statue_id != -1)
-				{
-					Log(warning, "Removing old statue [" + rabbit_statue_id + "]");
-					
-					if (ObjectExists(rabbit_statue_id))
-						DeleteObjectID(rabbit_statue_id);
-					
-					rabbit_statue_id = -1;
-				}
-			}
-			
 			// This state is set and unset in editor.as (OpenCustomEditor() & CloseCustomEditor()
 			
 			LssEditingLevel();
@@ -560,7 +541,6 @@ void DrawGUI()
 {
 	if (custom_editor_open) DisplayLevelEditor();
 
-
 	switch (current_script_state)
 	{
 		case LSS_FADE_TO_STATUE:
@@ -588,6 +568,8 @@ void Menu()
 		ImGui_AlignTextToFramePadding();
 		ImGui_TextColored(HexColor("#FFD700"), "The Golden Rabbit Editor");
 		
+		ImGui_TextColored(HexColor("#FF6200"), "Warning!\nOpening the editor will reset\nyour current TGR level progress.\n\nNormal game data is not affected.");
+		
 		if (ImGui_Button("Open TGR Level Editor")) OpenCustomEditor();
 		
 		ImGui_EndMenu();
@@ -610,6 +592,19 @@ void SetWindowDimensions(int width, int height)
 bool DialogueCameraControl()
 {
 	return preview_running;
+}
+
+void DeleteLevelStatue()
+{
+	if (rabbit_statue_id != -1)
+	{
+		Log(warning, "Removing old statue [" + rabbit_statue_id + "]");
+		
+		if (ObjectExists(rabbit_statue_id))
+			DeleteObjectID(rabbit_statue_id);
+		
+		rabbit_statue_id = -1;
+	}
 }
 
 void UpdateCameraAndListenerToLookAtStatue()
