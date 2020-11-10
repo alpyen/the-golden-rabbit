@@ -1,22 +1,32 @@
 Changelog:
 
+All States (except the empty ones) have been moved into their respective files.
+All variables have been moved into their respective files.
 
 
-LevelEditor, implement:
-	Move Object up
-	Move Object down
-	Refresh Object (vec3(0) for statue pos/dir rightnow)
-	Save To Mod
-	Add New Position
-	Delete Position
+Editor:
+
+	Save implemented (only for local mods)
+	Add implemented
+	Delete implemented
+	Apply implemented
 	
-	Spawn Rabbit and place it when clicked on position
-	Spawn Rabbit in front of camera
+	Move Up implemented
+	Move down implemented
 
-Change state when level editor is open
-despawn the rabbit which was spawned for completing the level (if there was one) and spawn one for the editor
+-----
 
-ToDo-List:
+make an own statue with no collision flag?
+
+can you full reset while pasusing? YES
+
+Check if a mod is a local mod and only display those because otherwise the pathing might break.
+We are writing directly to Data/Mods/mod-id/Data/TheGoldenRabbit/mod-id/custom.tgr
+Also editing steam workshop stuff is dangerous and not good.
+
+
+Why does saving the JSON take that long?
+
 
 Complete mod.xml
 
@@ -26,17 +36,19 @@ Write README.md
 Add and finish Level Editor
 
 
-Implement messag reset (status preview running = false etc) only resetting everything for now because devphase
-Dying in a level with checkpoints should not reset the statue to the very first position.
+Implement a decent reset routine.
+
+	If you reset while fading then the fading should be removed and the player should continue on the state.
+	If he was searching, then keep him in searching, if the level has no tgr data, stay in LSS_DO_NOTHING.
+	
+	Menu-Retry or Death should not reset the whole level.
+
 
 
 Fix animation to 36 frames (0dg, 10dg, .... 350dg), it's 35 frames now.
 Don't forget to adjust the loop limit to more one!!
 
-
 camera might glitch around during preview and jumping into the editor with f1
-
-Add automatic/easy way of creating new .tgr files.
 
 
 Notes:

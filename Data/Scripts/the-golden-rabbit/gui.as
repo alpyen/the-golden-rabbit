@@ -1,3 +1,15 @@
+const float COUNTER_GUI_DISTANCE_FROM_RIGHT = 0.0f;
+const float COUNTER_GUI_DISTANCE_FROM_BOTTOM = 400.0f;
+const float COUNTER_GUI_LEFT_RIGHT_MARGIN = 50.0f;
+const float COUNTER_GUI_TOP_BOTTOM_MARGIN = 10.0f;
+
+const float COUNTER_GUI_RABBIT_STATUE_HEIGHT = 100.0f;
+
+const float COUNTER_SLIDE_DURATION = 0.5f;
+const float COUNTER_DURATION = 5.0f;
+
+const int AMOUNT_RABBIT_STATUE_ANIMATION_FRAMES = 35;
+
 IMGUI@ gui;
 IMImage@ preview_fade_image;
 
@@ -6,20 +18,112 @@ IMImage@ counter_background_image;
 IMImage@ rabbit_statue_image;
 IMText@ level_progress_text;
 
-const float COUNTER_GUI_DISTANCE_FROM_RIGHT = 0.0f;
-const float COUNTER_GUI_DISTANCE_FROM_BOTTOM = 400.0f;
-const float COUNTER_GUI_LEFT_RIGHT_MARGIN = 50.0f;
-const float COUNTER_GUI_TOP_BOTTOM_MARGIN = 10.0f;
+float counter_slide_timestamp;
+float counter_timestamp;
 
-const float COUNTER_GUI_RABBIT_STATUE_HEIGHT = 100.0f;
+enum GuiCounterState {
+	GCS_HIDDEN = 0,
+	GCS_SLIDING_IN = 1,
+	GCS_SHOWING = 2,
+	GCS_SLIDING_OUT = 3
+}
 
-int AMOUNT_RABBIT_STATUE_ANIMATION_FRAMES = 35;
+void GcsSlidingIn(bool state_changed)
+{
+	if (state_changed)
+	{
+		counter_slide_timestamp = GetLevelTime();
+		
+		counter_container.setVisible(true);
+		for (uint i = 0; i < counter_container.getFloatingContents().length(); i++)
+			counter_container.getFloatingContents()[i].setVisible(true);
+	}
+
+	RefreshRabbitGuiAnimation();
+
+	if (GetLevelTime() - counter_slide_timestamp <= COUNTER_SLIDE_DURATION)
+	{
+		float percentage = (GetLevelTime() - counter_slide_timestamp) / COUNTER_SLIDE_DURATION;
+		
+		// We are using 1.001 the length of the GUI because if we only use 1.0
+		// then the counter gui might leave a gap between itself and the window frame.
+		
+		gui.getMain().moveElement(
+			counter_container.getName(),
+			vec2(
+				1.001f * gui.getMain().getSizeX() - (counter_container.getSizeX() - COUNTER_GUI_DISTANCE_FROM_RIGHT) * percentage,
+				gui.getMain().getSizeY() - counter_container.getSizeY() - COUNTER_GUI_DISTANCE_FROM_BOTTOM
+			)
+		);
+	}
+	else
+	{
+		gui.getMain().moveElement(
+			counter_container.getName(),
+			vec2(
+				1.001f * gui.getMain().getSizeX() - (counter_container.getSizeX() - COUNTER_GUI_DISTANCE_FROM_RIGHT),
+				gui.getMain().getSizeY() - counter_container.getSizeY() - COUNTER_GUI_DISTANCE_FROM_BOTTOM
+			)
+		);
+
+		current_counter_state = GCS_SHOWING;
+		Log(fatal, "GCS_SLIDING_IN -> GCS_SHOWING");
+	}
+}
+
+void GcsShowing(bool state_changed)
+{
+	if (state_changed)
+	{
+		counter_timestamp = GetLevelTime();
+	}
+
+	RefreshRabbitGuiAnimation();
+
+	if (GetLevelTime() - counter_timestamp >= COUNTER_DURATION)
+	{
+		current_counter_state = GCS_SLIDING_OUT;
+		Log(fatal, "GCS_SHOWING -> GCS_SLIDING_OUT");
+	}
+}
+
+void GcsSlidingOut(bool state_changed)
+{
+	if (state_changed)
+	{
+		counter_slide_timestamp = GetLevelTime();
+	}
+
+	RefreshRabbitGuiAnimation();
+
+	if (GetLevelTime() - counter_slide_timestamp <= COUNTER_SLIDE_DURATION)
+	{
+		float percentage = (GetLevelTime() - counter_slide_timestamp) / COUNTER_SLIDE_DURATION;
+						
+		gui.getMain().moveElement(
+			counter_container.getName(),
+			vec2(
+				1.001f * gui.getMain().getSizeX() - (counter_container.getSizeX() - COUNTER_GUI_DISTANCE_FROM_RIGHT) * (1.0f - percentage),
+				gui.getMain().getSizeY() - counter_container.getSizeY() - COUNTER_GUI_DISTANCE_FROM_BOTTOM
+			)
+		);
+	}
+	else
+	{
+		counter_container.setVisible(false);
+		for (uint i = 0; i < counter_container.getFloatingContents().length(); i++)
+			counter_container.getFloatingContents()[i].setVisible(false);
+
+		current_counter_state = GCS_HIDDEN;
+		Log(fatal, "GCS_SLIDING_OUT -> GCS_HIDDEN");
+	}
+}
 
 void UpdateCounterProgressText()
 {
 	Log(fatal, "Updating Progress: " + level_progress);
 
-	level_progress_text.setText(level_progress + " / " + tgr_levels[level_index].positions.length());
+	level_progress_text.setText(level_progress + " / " + current_level.positions.length());
 	
 	gui.update();
 	
@@ -34,7 +138,7 @@ void UpdateCounterProgressText()
 	);
 }
 
-void RefreshRabbitStatueAnimation()
+void RefreshRabbitGuiAnimation()
 {
 	int frame = int(floor((GetLevelTime() - floor(GetLevelTime())) * 35));
 
@@ -179,5 +283,18 @@ void ResizeGUIToFullscreen(bool bFromWindowResize = false)
 		gui.getMain().setSize(vec2(fGUIWidth, fGUIHeight));
 	}
 		
-	gui.update();	
+	gui.update();
+	
+	// If we don't check for this flag then the counter_container will return a null pointer,
+	// since this function is also called during gui creation.
+	if (bFromWindowResize)
+	{
+		gui.getMain().moveElement(
+			counter_container.getName(),
+			vec2(
+				gui.getMain().getSizeX() - counter_container.getSizeX() - COUNTER_GUI_DISTANCE_FROM_RIGHT,
+				gui.getMain().getSizeY() - counter_container.getSizeY() - COUNTER_GUI_DISTANCE_FROM_BOTTOM
+			)
+		);
+	}
 }

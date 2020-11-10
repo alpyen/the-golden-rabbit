@@ -11,6 +11,76 @@ JSONValue ReadLevelJsonFromMod(string mod_id)
 	return level_json;
 }
 
+void WriteLevelJsonFromTGRData(array<TGRLevel@> tgr_levels, string mod_id)
+{
+	// We are explicitly not writing `overridable´ in this function because
+	// overridable is only designed for the built-in maps.
+
+	JSON json;
+	
+	json.getRoot()["levels"] = JSONValue(JSONarrayValue);
+	
+	for (uint level_index = 0; level_index < tgr_levels.length(); level_index++)
+	{
+		TGRLevel@ current_tgr_level = tgr_levels[level_index];
+		
+		if (current_tgr_level.positions.length() == 0) continue;
+		
+		JSONValue current_level(JSONobjectValue);
+		
+		current_level["level_name"] = JSONValue(current_tgr_level.level_name);	
+		current_level["positions"] = JSONValue(JSONarrayValue);
+		
+		for (uint position_index = 0; position_index < current_tgr_level.positions.length(); position_index++)
+		{
+			Position@ current_position = current_tgr_level.positions[position_index];
+		
+			JSONValue position = JSONValue(JSONobjectValue);
+			
+			JSONValue camera_position = JSONValue(JSONarrayValue);
+			camera_position[0] = current_position.camera.x;
+			camera_position[1] = current_position.camera.y;
+			camera_position[2] = current_position.camera.z;
+			
+			JSONValue statue_position = JSONValue(JSONarrayValue);
+			statue_position[0] = current_position.statue.x;
+			statue_position[1] = current_position.statue.y;
+			statue_position[2] = current_position.statue.z;
+			
+			JSONValue statue_rotation = JSONValue(JSONarrayValue);
+			statue_rotation[0] = current_position.statue_rotation.x;
+			statue_rotation[1] = current_position.statue_rotation.y;
+			statue_rotation[2] = current_position.statue_rotation.z;
+			statue_rotation[3] = current_position.statue_rotation.w;
+						
+			position["camera"] = camera_position;
+			position["statue"] = statue_position;
+			position["statue_rotation"] = statue_rotation;
+			
+			current_level["positions"].append(position);
+		}
+				
+		json.getRoot()["levels"][level_index] = current_level;
+	}
+	
+	StartWriteFile();
+	AddFileString(json.writeString(true));
+	WriteFileToWriteDir("Data/Mods/" + mod_id + "/Data/TheGoldenRabbit/" + mod_id + "/custom.tgr");
+}
+
+TGRLevel@ GetCurrentTGRLevel(array<TGRLevel@> tgr_levels)
+{
+	string current_level_name = GetCurrLevelRelPath();
+	
+	for (uint i = 0; i < tgr_levels.length(); i++)
+	{
+		if (tgr_levels[i].level_name == current_level_name)
+			return tgr_levels[i];
+	}
+	
+	return null;
+}
+
 array<TGRLevel@> ScanAndParseFiles()
 {
 	array<TGRLevel@> levels;
@@ -169,8 +239,10 @@ void ParseLevelsFromFile(array<TGRLevel@>& inout new_levels, string path)
 				vec3(camera[0].asFloat(), camera[1].asFloat(), camera[2].asFloat()),
 				vec3(statue[0].asFloat(), statue[1].asFloat(), statue[2].asFloat()),
 				quaternion(
-					statue_rotation[0].asFloat(), statue_rotation[1].asFloat(),
-					statue_rotation[2].asFloat(), statue_rotation[3].asFloat()
+					statue_rotation[0].asFloat(),
+					statue_rotation[1].asFloat(),
+					statue_rotation[2].asFloat(),
+					statue_rotation[3].asFloat()
 				)
 			);
 			
