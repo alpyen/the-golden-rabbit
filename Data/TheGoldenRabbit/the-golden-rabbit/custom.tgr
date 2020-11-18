@@ -2,22 +2,6 @@
 	"overridable": true,
 	"levels": [
 		{
-			"level_name" : "Data/Levels/the-golden-rabbit/testlevel.xml",
-			"positions" : 
-			[
-				{
-					"camera": [ 5.680, 0.951, -2.503 ],
-					"statue": [ 4.245, 1.036, -5.371 ],
-					"statue_rotation": [ 0.000, 0.000, 0.000, 1.000 ]
-				},
-				{
-					"camera": [ -12.609, 1.131, -13.794 ],
-					"statue": [ -14.732, 0.036, -16.350 ],
-					"statue_rotation": [ 0.000, 0.000, 0.000, 1.000 ]
-				}
-			]
-		},
-		{
 			"level_name": "Data/Levels/og_story/01_Slaver_Camp_Landing.xml",
 			"positions":
 			[

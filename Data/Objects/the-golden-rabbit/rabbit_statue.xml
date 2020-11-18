@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<Object>
+	<Model>Data/Models/Objects/rabbit_statue/aaa/rabbit_statue_1.obj</Model>
+    <ColorMap>Data/Textures/Objects/statues/1_c.tga</ColorMap>
+    <NormalMap>Data/Textures/diffusebump.tga</NormalMap>
+	<ShaderPath>Data/GLSL/cubemap</ShaderPath>
+	<ShaderName>cubemap</ShaderName>
+	
+	<flags no_collision="true" />
+</Object>

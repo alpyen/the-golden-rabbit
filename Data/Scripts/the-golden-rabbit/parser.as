@@ -93,7 +93,7 @@ array<TGRLevel@> ScanAndParseFiles()
 	{
 		// So we save some time scanning files, because the core mods will have no TGR data.
 		if (ModIsCore(mods[i])) continue;
-		
+				
 		string mod_id = ModGetID(mods[i]);
 		
 		if (FileExists("Data/TheGoldenRabbit/" + mod_id + "/custom.tgr"))

@@ -46,9 +46,7 @@ void MoveCameraAndStatueToTargetLocation()
 
 		camera.SetPos(preview_position.camera);
 		camera.LookAt(preview_position.statue);
-		
-	}
-	
+	}	
 }
 
 void MenuCustomEditor()
@@ -79,7 +77,7 @@ void OpenCustomEditor()
 	
 	for (uint i = 0; i < mods.length(); i++)
 	{
-		if (ModIsCore(mods[i]) || ModGetID(mods[i]) == "the-golden-rabbit") continue;
+		if (ModIsCore(mods[i]) || IsWorkshopMod(mods[i]) || ModGetID(mods[i]) == "the-golden-rabbit") continue;
 		
 		mod_names.insertLast(ModGetName(mods[i]) + " [" + ModGetID(mods[i]) + "]");
 		mod_ids.insertLast(ModGetID(mods[i]));
@@ -255,6 +253,7 @@ void LevelEditorPositionListClicked(bool same_position_clicked)
 		// Deselect incase it was the same
 		selected_position = -1;
 		HideRabbitStatue();
+		DeselectAll();
 	}
 	else
 	{			
@@ -278,7 +277,7 @@ void DisplayLevelEditor()
 		
 	ImGui_AlignTextToFramePadding();
 	
-	ImGui_Text("Save To Mod:");
+	ImGui_Text(" Local Mod: ");
 	ImGui_SameLine();
 	
 	ImGui_PushItemWidth(359.0f); int old_selected_mod_name = selected_mod_name;

@@ -11,7 +11,7 @@ int rabbit_statue_id = -1;
 
 void CreateRabbitStatue()
 {
-	rabbit_statue_id = CreateObject("Data/Objects/therium/rabbit_statue/rabbit_statue_1.xml", true);
+	rabbit_statue_id = CreateObject("Data/Objects/the-golden-rabbit/rabbit_statue.xml", true);
 	
 	Object@ statue = ReadObjectFromID(rabbit_statue_id);	
 	statue.SetSelectable(true);

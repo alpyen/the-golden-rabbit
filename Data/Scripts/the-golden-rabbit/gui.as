@@ -8,7 +8,7 @@ const float COUNTER_GUI_RABBIT_STATUE_HEIGHT = 100.0f;
 const float COUNTER_SLIDE_DURATION = 0.5f;
 const float COUNTER_DURATION = 5.0f;
 
-const int AMOUNT_RABBIT_STATUE_ANIMATION_FRAMES = 35;
+const int AMOUNT_RABBIT_STATUE_ANIMATION_FRAMES = 36;
 
 IMGUI@ gui;
 IMImage@ preview_fade_image;

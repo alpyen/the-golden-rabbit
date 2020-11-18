@@ -7,6 +7,7 @@
 
 #include "the-golden-rabbit/parser.as"
 
+bool editor_mode_active = false;
 int player_id = -1;
 
 LevelScriptState current_level_state = LevelScriptState(-1);
@@ -40,7 +41,8 @@ void Update(int is_paused)
 	// Check if game is paused. If so, do not advance any script logic.
 	if (UpdatePauseTimer(is_paused)) return;
 	
-	UpdatePlayerID();	
+	DetectEditorMode();
+	UpdatePlayerID();
 	
 	bool level_state_changed = false;
 	if (previous_level_state != current_level_state)
@@ -92,9 +94,31 @@ void Update(int is_paused)
 
 void ReceiveMessage(string message)
 {
-	if (message == "post_reset")
+	if (message == "dispose_level")
 	{
-		
+		Log(fatal, "DISPOSING LEVEL !!!!!!");
+	}
+	else if (message == "post_reset")
+	{
+		switch (current_level_state)
+		{
+			case LSS_FADE_TO_PLAYER:
+			case LSS_FADE_TO_STATUE:
+			case LSS_LOOKING_AT_STATUE: {
+			
+				Log(warning, "ITS RESET TIME");
+			
+				// Player could be in fade, remove the fade and keep on searching.
+				preview_fade_image.setVisible(false);
+				preview_running = false;
+				
+				Log(fatal, "<RESET> -> LSS_PLAYER_IS_SEARCHING");
+				current_level_state = LSS_PLAYER_IS_SEARCHING;
+			
+			} break;
+			
+			// For the other cases we don't have to do anything.
+		}
 	}
 	else if (message == "full_reset")
 	{
@@ -109,6 +133,7 @@ void ReceiveMessage(string message)
 		
 		@current_level = null;
 		
+		if (player_id != -1) ReadCharacterID(player_id).static_char = false;
 		player_id = -1;
 		player_velocity = vec3(0.0f);
 
@@ -210,6 +235,34 @@ bool UpdatePauseTimer(int is_paused)
 	}
 	
 	return false;
+}
+
+// We have to check if we entered the edit mode because if we set the camera
+// during previews and enter the editor, the camera will twitch back and forth.
+// So if we are in a state that will mess with the camera, we will update it to
+// LSS_PLAYER_IS_SEARCHING if the player still has statues.
+void DetectEditorMode()
+{
+	bool editor_now_active = EditorModeActive();
+
+	if (editor_now_active && !editor_mode_active)
+	{
+		editor_mode_active = true;
+		
+		switch (current_level_state)
+		{
+			case LSS_FADE_TO_STATUE:
+			case LSS_LOOKING_AT_STATUE:
+			case LSS_FADE_TO_PLAYER: {
+				ResetToPlayerIsSearching();
+				Log(fatal, "EDITOR DETECTED -> LSS_PLAYER_IS_SEARCHING");
+			} break;
+		}
+	}
+	else if (!editor_now_active && editor_mode_active)
+	{
+		editor_mode_active = false;
+	}
 }
 
 void UpdatePlayerID()

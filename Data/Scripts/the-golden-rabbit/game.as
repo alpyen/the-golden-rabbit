@@ -35,6 +35,16 @@ enum LevelScriptState
 	LSS_EDITING_LEVEL = 8
 }
 
+void ResetToPlayerIsSearching()
+{
+	if (player_id != -1) ReadCharacterID(player_id).static_char = false;
+	
+	preview_running = false;
+	
+	preview_fade_image.setVisible(false);
+	current_level_state = LSS_PLAYER_IS_SEARCHING;
+}
+
 void LssSetup(bool state_changed)
 {
 	if (state_changed) { }
@@ -121,8 +131,22 @@ void LssStatueWasFound(bool state_changed)
 			
 			SpawnRabbitStatueMist(current_level.positions[level_progress].statue, false);
 		
-			current_level_state = LSS_FADE_TO_STATUE;
-			Log(fatal, "LSS_STATUE_WAS_FOUND -> LSS_FADE_TO_STATUE");
+			// If we are in a dialogue we will not fade to the statue, because that will mess with the camera.
+			// This case is only really necessary when a statue was touched and the player resets the level within that 1 second
+			// and starts a dialogue (or the auto-dialogue on some levels).
+			// EditorModeActive is handled here separately because we need to spawn
+			// the statue first.
+			if (level.DialogueCameraControl() || EditorModeActive())
+			{
+				ResetToPlayerIsSearching();
+				Log(fatal, "LSS_STATUE_WAS_FOUND [DIALOGUE/EDITOR RUNNING] -> LSS_PLAYER_IS_SEARCHING");
+				return;
+			}
+			else
+			{
+				current_level_state = LSS_FADE_TO_STATUE;
+				Log(fatal, "LSS_STATUE_WAS_FOUND -> LSS_FADE_TO_STATUE");	
+			}
 		}
 	}
 }
@@ -146,6 +170,13 @@ void LssFadeToStatue(bool state_changed)
 	{
 		float alpha = (GetLevelTime() - preview_fade_timestamp) / (PREVIEW_FADE_DURATION / 2.0f);
 		preview_fade_image.setColor(vec4(vec3(0.0f), min(1.0f, alpha)));
+		
+		if (level.DialogueCameraControl())
+		{
+			Log(fatal, "LSS_FADE_TO_STATUE [DIALOGUE IS RUNNING] -> LSS_PLAYER_IS_SEARCHING");
+			ResetToPlayerIsSearching();			
+			return;
+		}
 	} // We are fading in. Lighten image.
 	else if (GetLevelTime() - preview_fade_timestamp > PREVIEW_FADE_DURATION / 2.0f && GetLevelTime() - preview_fade_timestamp < PREVIEW_FADE_DURATION)
 	{
