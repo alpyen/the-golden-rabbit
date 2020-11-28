@@ -166,6 +166,7 @@ void ReceiveMessage(string message)
 		
 		//editor.as
 		custom_editor_open = false;
+		gui_has_unsaved_changes = false;
 		mod_levels.resize(0);
 		mod_levels_index = -1;
 
@@ -182,7 +183,8 @@ void ReceiveMessage(string message)
 
 void DrawGUI()
 {
-	if (custom_editor_open) DisplayLevelEditor();
+	// Show normal editor and on unsaved changes popup dialogue.
+	if (custom_editor_open || (!custom_editor_open && gui_has_unsaved_changes)) DisplayLevelEditor();
 
 	switch (current_level_state)
 	{

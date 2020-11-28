@@ -1,22 +1,15 @@
 Changelog:
 
-Created a non-collidable version of the rabbit statue and replaced the original.
+Unsaved Changes - pop up dialogue added
+Preview and Thumbnail added (two versions)
 
-Bugfix, Starting a dialogue while LSS_STATUE_WAS_FOUND or LSS_FADE_... was running.
-
-Decent Reset routine was implemented.
-
-UI Rabbit Statue Animation Fixed
-
-Switching to editor will not mess with the camera anymore,
-unfortunetaly this messed quite a lot with the code so it might need to be
-refactored later on.
+The first two levels from the Overgrowth campaign added as tgr levels.
 
 -----
 
-Complete mod.xml
-
 Write README.md
+
+Remove the possibility to modify the mods own levels later on. This is just for debug purposes!
 
 Notes:
 

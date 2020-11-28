@@ -6,6 +6,7 @@ const TextureAssetRef TEXTURE_APPLY = LoadTexture("Data/Textures/the-golden-rabb
 const TextureAssetRef TEXTURE_SAVE = LoadTexture("Data/Textures/the-golden-rabbit/UI/save.png");
 
 bool custom_editor_open = false;
+bool gui_has_unsaved_changes = false;
 
 array<TGRLevel@> mod_levels;
 int mod_levels_index = -1;
@@ -77,7 +78,7 @@ void OpenCustomEditor()
 	
 	for (uint i = 0; i < mods.length(); i++)
 	{
-		if (ModIsCore(mods[i]) || IsWorkshopMod(mods[i]) || ModGetID(mods[i]) == "the-golden-rabbit") continue;
+		if (ModIsCore(mods[i]) || IsWorkshopMod(mods[i])) continue;// || ModGetID(mods[i]) == "the-golden-rabbit") continue;
 		
 		mod_names.insertLast(ModGetName(mods[i]) + " [" + ModGetID(mods[i]) + "]");
 		mod_ids.insertLast(ModGetID(mods[i]));
@@ -91,6 +92,7 @@ void OpenCustomEditor()
 	}
 		
 	custom_editor_open = true;
+	gui_has_unsaved_changes = false;
 	
 	HideRabbitStatue();	
 	SetModInLevelEditorGUI();
@@ -102,6 +104,7 @@ void OpenCustomEditor()
 
 void CloseCustomEditor()
 {
+	gui_has_unsaved_changes = false;
 	selected_position = -1;
 	
 	HideRabbitStatue();
@@ -177,11 +180,14 @@ array<string> GetListBoxStringArrayFromPositions()
 
 void LevelEditorSave()
 {
+	gui_has_unsaved_changes = false;
 	WriteLevelJsonFromTGRData(mod_levels, mod_ids[selected_mod_name]);
 }
 
 void LevelEditorAddPosition()
 {
+	gui_has_unsaved_changes = true;
+
 	Position new_position(
 		camera.GetPos(),
 		camera.GetPos() + camera.GetFacing(), 
@@ -206,6 +212,7 @@ void LevelEditorDeletePosition()
 		
 		selected_position = -1;
 		DeselectAll();
+		gui_has_unsaved_changes = true;
 	}
 }
 
@@ -219,11 +226,14 @@ void LevelEditorApplyPosition()
 			GetRabbitStatueRotation()
 		);		
 		@mod_level.positions[selected_position] = new_position;
+		gui_has_unsaved_changes = true;
 	}
 }
 
 void LevelEditorMoveUp()
 {
+	gui_has_unsaved_changes = true;
+
 	if (selected_position > 0)
 	{
 		Position@ tmp = mod_level.positions[selected_position - 1];
@@ -243,6 +253,7 @@ void LevelEditorMoveDown()
 		@mod_level.positions[selected_position] = tmp;
 		
 		selected_position++;
+		gui_has_unsaved_changes = true;
 	}
 }
 
@@ -265,15 +276,37 @@ void LevelEditorPositionListClicked(bool same_position_clicked)
 
 void DisplayLevelEditor()
 {
-	const vec2 GUI_SIZE(500.0f, 250.0f);
-
-	ImGui_SetNextWindowSize(GUI_SIZE, ImGuiSetCond_Always);
-	ImGui_SetNextWindowPos((screenMetrics.screenSize - GUI_SIZE) / 2.0f, ImGuiSetCond_FirstUseEver);
+	const vec2 EDITOR_GUI_SIZE(500.0f, 250.0f);
+	const vec2 SAVE_GUI_SIZE(300, 100.0f);
 	
-	if (ImGui_Begin("The Golden Rabbit - Level Editor", custom_editor_open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse) && !custom_editor_open)
+	if (!custom_editor_open && gui_has_unsaved_changes)
 	{
-		CloseCustomEditor();
+		ImGui_SetNextWindowSize(SAVE_GUI_SIZE, ImGuiSetCond_Always);
+		ImGui_SetNextWindowPos((screenMetrics.screenSize - SAVE_GUI_SIZE) / 2.0f, ImGuiSetCond_Always);
+		
+		ImGui_Begin("The Golden Rabbit - Level Editor - Unsaved Changes", gui_has_unsaved_changes, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+		
+		ImGui_Text("Level has unsaved changes in TGR data.\n\n");
+		ImGui_Text("Save them?");
+		
+		if (ImGui_Button("Yes")) LevelEditorSave();
+		ImGui_SameLine();
+		
+		if (ImGui_Button("No")) CloseCustomEditor();
+		ImGui_SameLine();
+		
+		if (ImGui_Button("Cancel")) custom_editor_open = true;
+		
+		ImGui_End();
+		
+		return; // Do not run the normal editor code while the popup is being displayed!
 	}
+	
+	
+	ImGui_SetNextWindowSize(EDITOR_GUI_SIZE, ImGuiSetCond_Always);
+	ImGui_SetNextWindowPos((screenMetrics.screenSize - EDITOR_GUI_SIZE) / 2.0f, ImGuiSetCond_FirstUseEver);
+	
+	ImGui_Begin("The Golden Rabbit - Level Editor", custom_editor_open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 		
 	ImGui_AlignTextToFramePadding();
 	
