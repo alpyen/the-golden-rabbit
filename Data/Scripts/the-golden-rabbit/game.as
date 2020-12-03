@@ -285,8 +285,11 @@ void LssAllStatuesFound(bool state_changed)
 
 void UpdateCameraAndListenerToLookAtStatue()
 {
-	camera.SetFOV(90);
 	camera.SetPos(current_level.positions[level_progress].camera);
 	camera.LookAt(current_level.positions[level_progress].statue);
+	
+	camera.SetFOV(90);
+	camera.SetDistance(0);
+	
 	UpdateListener(current_level.positions[level_progress].camera, vec3(0.0f), camera.GetFacing(), camera.GetUpVector());
 }

@@ -296,5 +296,7 @@ void ResizeGUIToFullscreen(bool bFromWindowResize = false)
 				gui.getMain().getSizeY() - counter_container.getSizeY() - COUNTER_GUI_DISTANCE_FROM_BOTTOM
 			)
 		);
+		
+		preview_fade_image.setSize(gui.getMain().getSize());
 	}
 }

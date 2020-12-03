@@ -47,6 +47,7 @@ void MoveCameraAndStatueToTargetLocation()
 
 		camera.SetPos(preview_position.camera);
 		camera.LookAt(preview_position.statue);
+		camera.SetFOV(90.0f);
 	}	
 }
 
@@ -276,7 +277,7 @@ void LevelEditorPositionListClicked(bool same_position_clicked)
 
 void DisplayLevelEditor()
 {
-	const vec2 EDITOR_GUI_SIZE(500.0f, 250.0f);
+	const vec2 EDITOR_GUI_SIZE(500.0f, 267.0f);
 	const vec2 SAVE_GUI_SIZE(300, 100.0f);
 	
 	if (!custom_editor_open && gui_has_unsaved_changes)
@@ -289,7 +290,7 @@ void DisplayLevelEditor()
 		ImGui_Text("Level has unsaved changes in TGR data.\n\n");
 		ImGui_Text("Save them?");
 		
-		if (ImGui_Button("Yes")) LevelEditorSave();
+		if (ImGui_Button("Yes")) { LevelEditorSave(); CloseCustomEditor(); }
 		ImGui_SameLine();
 		
 		if (ImGui_Button("No")) CloseCustomEditor();
@@ -302,11 +303,14 @@ void DisplayLevelEditor()
 		return; // Do not run the normal editor code while the popup is being displayed!
 	}
 	
-	
 	ImGui_SetNextWindowSize(EDITOR_GUI_SIZE, ImGuiSetCond_Always);
 	ImGui_SetNextWindowPos((screenMetrics.screenSize - EDITOR_GUI_SIZE) / 2.0f, ImGuiSetCond_FirstUseEver);
 	
-	ImGui_Begin("The Golden Rabbit - Level Editor", custom_editor_open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+	if (ImGui_Begin("The Golden Rabbit - Level Editor", custom_editor_open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse) && !custom_editor_open && !gui_has_unsaved_changes)
+	{
+		Log(warning, "Closting");
+		CloseCustomEditor();
+	}
 		
 	ImGui_AlignTextToFramePadding();
 	
@@ -344,6 +348,7 @@ void DisplayLevelEditor()
 	if (ImGui_ImageButton(TEXTURE_DOWN, vec2(16))) LevelEditorMoveDown();
 	
 	ImGui_TextColored(HexColor("#DEDBEF"), "Preview outside the editor is active when a position is selected.");
+	ImGui_TextColored(HexColor("#DEDBEF"), "The FOV will be fixed to 90 degrees during the statue previews.");
 	
 	ImGui_End();
 }

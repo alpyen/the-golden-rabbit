@@ -1,11 +1,17 @@
 Changelog:
 
-Unsaved Changes - pop up dialogue added
-Preview and Thumbnail added (two versions)
+Bugfix forgot to add the resizing of the preview fade image then the gui was resized.
 
-The first two levels from the Overgrowth campaign added as tgr levels.
+Bugfix forgot to set the camera FOV during editor preview
+
+Bugfix where the editor would not restore the state correctly because CloseCustomEditor was not called when
+there were no unsaved changes and the gui was closed with the X in the title bar.
+
+Bugfix Camera Distance was not 0 when the preview was on resulting in incorrect previews.
 
 -----
+
+Add a winning screen for the level (Congrats etc)
 
 Write README.md
 
