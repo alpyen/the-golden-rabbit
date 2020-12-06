@@ -73,13 +73,11 @@ void OpenCustomEditor()
 	mod_names.resize(0);
 	mod_ids.resize(0);
 	
-	mod_levels.resize(0);
-	
 	array<ModID>@ mods = GetActiveModSids();
 	
 	for (uint i = 0; i < mods.length(); i++)
 	{
-		if (ModIsCore(mods[i]) || IsWorkshopMod(mods[i])) continue;// || ModGetID(mods[i]) == "the-golden-rabbit") continue;
+		if (ModIsCore(mods[i]) || IsWorkshopMod(mods[i])) continue; // || ModGetID(mods[i]) == "the-golden-rabbit") continue;
 		
 		mod_names.insertLast(ModGetName(mods[i]) + " [" + ModGetID(mods[i]) + "]");
 		mod_ids.insertLast(ModGetID(mods[i]));
@@ -120,7 +118,13 @@ void SetModInLevelEditorGUI()
 {
 	selected_position = -1;
 	mod_levels_index = -1;
-	@mod_level = null;
+	HideRabbitStatue();
+	DeselectAll();
+	
+	@mod_level = null;	
+	mod_levels.resize(0);
+	
+	Log(fatal, "Loading from mod: " + mod_ids[selected_mod_name]);
 	
 	ParseLevelsFromFile(mod_levels, "Data/TheGoldenRabbit/" + mod_ids[selected_mod_name] + "/custom.tgr");
 	
@@ -308,7 +312,6 @@ void DisplayLevelEditor()
 	
 	if (ImGui_Begin("The Golden Rabbit - Level Editor", custom_editor_open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse) && !custom_editor_open && !gui_has_unsaved_changes)
 	{
-		Log(warning, "Closting");
 		CloseCustomEditor();
 	}
 		
@@ -320,6 +323,7 @@ void DisplayLevelEditor()
 	ImGui_PushItemWidth(359.0f); int old_selected_mod_name = selected_mod_name;
 	if (ImGui_Combo("", selected_mod_name, mod_names) && selected_mod_name != old_selected_mod_name)
 	{
+		gui_has_unsaved_changes = false;
 		SetModInLevelEditorGUI();
 	}
 	ImGui_PopItemWidth();

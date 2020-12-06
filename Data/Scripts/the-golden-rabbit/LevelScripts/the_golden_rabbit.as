@@ -50,11 +50,11 @@ void Update(int is_paused)
 		previous_level_state = current_level_state;
 		level_state_changed = true;
 	}
-		
+	
 	switch (current_level_state)
 	{
 		// game.as
-		case LSS_SETUP: 				LssSetup(level_state_changed); break;
+		case LSS_SETUP:					LssSetup(level_state_changed); break;
 		case LSS_PLAYER_IS_SEARCHING: 	LssPlayerIsSearching(level_state_changed); break;	
 		case LSS_STATUE_WAS_FOUND: 		LssStatueWasFound(level_state_changed); break;
 		case LSS_FADE_TO_STATUE: 		LssFadeToStatue(level_state_changed); break;

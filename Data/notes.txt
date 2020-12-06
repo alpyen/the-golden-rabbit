@@ -1,24 +1,40 @@
 Changelog:
 
-Bugfix forgot to add the resizing of the preview fade image then the gui was resized.
+Bugfix, changing the mod in the editor changes the checkpoints in the editor now aswell.
+This now fixes the severe bug in the previous commit.
 
-Bugfix forgot to set the camera FOV during editor preview
 
-Bugfix where the editor would not restore the state correctly because CloseCustomEditor was not called when
-there were no unsaved changes and the gui was closed with the X in the title bar.
-
-Bugfix Camera Distance was not 0 when the preview was on resulting in incorrect previews.
 
 -----
+
+Set the tgr levels of the mod itself overridable later on
+ Levels created with the mod are non-overridable be default!
+
 
 Add a winning screen for the level (Congrats etc)
 
 Write README.md
 
+Remove ReadLevelJsonFromMod if not needed
+
+Severe error in editor, the statues of the currently loaded mod are displayed
+in the listbox, not the one that is being edited!!
+
+Add message interface for other mods to interface with TGR
+
 Remove the possibility to modify the mods own levels later on. This is just for debug purposes!
+
+Exit preview immediately when the pause menu opens, otherwise people can cheat
 
 Notes:
 
 	The error handling in parser.as is so detailed because we are writing the json files
 	by hand right now. Upon later automation, the detailed checks will be removed,
 	and a simple yes/no parseable output will be displayed.
+	
+	Switching mod in editor gui will throw away all unsaved changes. No save dialogue
+	
+	
+Later Testing:
+
+	Check if Workshop Mod also applies to TGR mods that have been uploaded but are loaded locally
