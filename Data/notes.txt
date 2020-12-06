@@ -1,9 +1,5 @@
 Changelog:
 
-Bugfix, changing the mod in the editor changes the checkpoints in the editor now aswell.
-This now fixes the severe bug in the previous commit.
-
-
 
 -----
 
@@ -38,3 +34,4 @@ Notes:
 Later Testing:
 
 	Check if Workshop Mod also applies to TGR mods that have been uploaded but are loaded locally
+	
