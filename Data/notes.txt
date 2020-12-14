@@ -6,6 +6,9 @@ Changelog:
 Set the tgr levels of the mod itself overridable later on
  Levels created with the mod are non-overridable be default!
 
+When Static objects are not selectable by the editor and the rabbit
+spawns in the editor, it will not be clickable even if the option is unlocked
+becasue SetSelectable wasn't set anymore
 
 Add a winning screen for the level (Congrats etc)
 
