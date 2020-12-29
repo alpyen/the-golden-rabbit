@@ -1,6 +1,10 @@
 const float STATUE_TOUCHING_DISTANCE = 0.6f;
 const float PREVIEW_FADE_DURATION = 0.5f;
 const float PREVIEW_DURATION = 2.0f;
+const float STATISTICS_DURATION = 6.0f;
+
+float search_begin_timestamp;
+int reset_amount = 0;
 
 float last_pause_timestamp;
 float paused_time_in_level;
@@ -21,6 +25,8 @@ vec3 old_camera_position;
 vec3 old_camera_facing;
 
 float preview_timestamp;
+
+float statistics_timestamp;
 
 enum LevelScriptState
 {
@@ -63,6 +69,9 @@ void LssSetup(bool state_changed)
 	{
 		MoveRabbitStatue(current_level.positions[0]);
 		ShowRabbitStatue();
+
+		search_begin_timestamp = GetLevelTime();
+		reset_amount = 0;
 		
 		level_progress = 0;			
 		UpdateCounterProgressText();
@@ -280,6 +289,18 @@ void LssAllStatuesFound(bool state_changed)
 		SpawnRabbitStatueMist(current_level.positions[level_progress - 1].statue, true);
 		
 		PlaySound("Data/Sounds/the-golden-rabbit/cheer.wav");
+		
+		statistics_timestamp = GetLevelTime();
+		SetStatistics(GetLevelTime() - search_begin_timestamp, reset_amount);
+		SetStatisticsVisibility(true);
+	}
+		
+	if (GetLevelTime() - statistics_timestamp > STATISTICS_DURATION)
+	{
+		SetStatisticsVisibility(false);
+	
+		Log(fatal, "LSS_ALL_STATUES_FOUND -> LSS_DO_NOTHING");
+		current_level_state = LSS_DO_NOTHING;
 	}
 }
 

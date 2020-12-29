@@ -39,7 +39,14 @@ void Init(string level_name)
 void Update(int is_paused)
 {
 	// Check if game is paused. If so, do not advance any script logic.
-	if (UpdatePauseTimer(is_paused)) return;
+	// Removed as of 29-12-2020 because this would enable cheating by
+	// pausing the preview while it is running.
+	// We are only updating the pause timer so the time taken does not increase
+	// while being paused but the script keeps on running.
+	// To pause the script you'd need to check with if(UpdatePauseTimer(is_paused)) return;
+	// Technically now you can cheat and not let the previews count into the game time
+	// because they will keep running due to anti-cheat measures, but that's a minuscule amount.
+	UpdatePauseTimer(is_paused);
 	
 	DetectEditorMode();
 	UpdatePlayerID();
@@ -100,6 +107,10 @@ void ReceiveMessage(string message)
 	}
 	else if (message == "post_reset")
 	{
+		reset_amount += 1;
+	
+		Log(fatal, ImGui_GetTime() + "POST_RESET_WAS_CALLED");
+	
 		switch (current_level_state)
 		{
 			case LSS_FADE_TO_PLAYER:
@@ -115,6 +126,13 @@ void ReceiveMessage(string message)
 				Log(fatal, "<RESET> -> LSS_PLAYER_IS_SEARCHING");
 				current_level_state = LSS_PLAYER_IS_SEARCHING;
 			
+			} break;
+			
+			case LSS_ALL_STATUES_FOUND: {
+				SetStatisticsVisibility(false);
+			
+				Log(fatal, "<RESET FROM ALL STATUES FOUND> -> LSS_DO_NOTHING");
+				current_level_state = LSS_DO_NOTHING;
 			} break;
 			
 			// For the other cases we don't have to do anything.
@@ -137,6 +155,9 @@ void ReceiveMessage(string message)
 		player_id = -1;
 		player_velocity = vec3(0.0f);
 
+		search_begin_timestamp = 0.0f;
+		reset_amount = 0;
+
 		before_preview_fade_timestamp = 0.0f;
 		preview_fade_mode_switched = false;
 		preview_fade_timestamp = 0.0f;
@@ -151,6 +172,14 @@ void ReceiveMessage(string message)
 		counter_timestamp = 0.0f;
 		
 		@gui = null;
+		
+		@congratulations_text = null;
+		@time_taken_text = null;
+		@time_taken_text2 = null;
+		@resets_amount_text = null;
+		@resets_amount_text2 = null;
+		
+		statistics_timestamp = 0.0f;
 		
 		@counter_container = null;
 		@counter_background_image = null;
@@ -188,6 +217,7 @@ void DrawGUI()
 
 	switch (current_level_state)
 	{
+		case LSS_ALL_STATUES_FOUND:
 		case LSS_FADE_TO_STATUE:
 		case LSS_FADE_TO_PLAYER: {
 			gui.render();

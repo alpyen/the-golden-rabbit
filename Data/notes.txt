@@ -1,29 +1,21 @@
 Changelog:
 
+Added "Congratulations" screen at the end (after finding the last statue)
+Removed pausing the previews for anti-cheat measures, pausing will stop the game timer from counting up though
+
+Removed ReadLevelJsonFromMod (not needed)
+
+Editor works fine now (with the mods in Documents, not intended for ProgramFiles mods)
+
+Core levels flagged overridable
 
 -----
 
-Set the tgr levels of the mod itself overridable later on
- Levels created with the mod are non-overridable be default!
+Write README.md after mod is published
 
-When Static objects are not selectable by the editor and the rabbit
-spawns in the editor, it will not be clickable even if the option is unlocked
-becasue SetSelectable wasn't set anymore
-
-Add a winning screen for the level (Congrats etc)
-
-Write README.md
-
-Remove ReadLevelJsonFromMod if not needed
-
-Severe error in editor, the statues of the currently loaded mod are displayed
-in the listbox, not the one that is being edited!!
+Remove any logging on release
 
 Add message interface for other mods to interface with TGR
-
-Remove the possibility to modify the mods own levels later on. This is just for debug purposes!
-
-Exit preview immediately when the pause menu opens, otherwise people can cheat
 
 Notes:
 
@@ -38,3 +30,10 @@ Later Testing:
 
 	Check if Workshop Mod also applies to TGR mods that have been uploaded but are loaded locally
 	
+	
+Future:
+
+	Possibility to view the preview again after 5 minutes?
+	Maybe not for the first statue, but have an indicator on the GUI? (Hotkey/Button?)
+		Unsure because it's not intended for a level to have more than 10-15 statues max.
+		Otherwise it would be way too overloaded if the level is big.

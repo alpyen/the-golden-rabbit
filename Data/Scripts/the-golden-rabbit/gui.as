@@ -13,6 +13,12 @@ const int AMOUNT_RABBIT_STATUE_ANIMATION_FRAMES = 36;
 IMGUI@ gui;
 IMImage@ preview_fade_image;
 
+IMText@ congratulations_text;
+IMText@ time_taken_text;
+IMText@ time_taken_text2;
+IMText@ resets_amount_text;
+IMText@ resets_amount_text2;
+
 IMContainer@ counter_container;
 IMImage@ counter_background_image;
 IMImage@ rabbit_statue_image;
@@ -26,6 +32,38 @@ enum GuiCounterState {
 	GCS_SLIDING_IN = 1,
 	GCS_SHOWING = 2,
 	GCS_SLIDING_OUT = 3
+}
+
+void SetStatisticsVisibility(bool show)
+{
+	congratulations_text.setVisible(show);
+	
+	time_taken_text.setVisible(show);
+	time_taken_text2.setVisible(show);
+	
+	resets_amount_text.setVisible(show);
+	resets_amount_text2.setVisible(show);
+}
+
+void SetStatistics(float time, int retries)
+{
+	int minutes = 0;
+	if (time >= 60) minutes = int(time) / 60;
+	
+	int seconds = int(time) - minutes * 60;
+	
+	string timestring = "";
+	if (minutes > 0) timestring += minutes + "m ";
+	
+	if (seconds > 0) timestring += seconds + "s";
+	
+	// Fallback check just for safety (if the script resets on a statue)
+	if (time < 1) timestring = "0s";
+	
+	time_taken_text2.setText(timestring);
+	resets_amount_text2.setText(retries + "");
+	
+	gui.update();
 }
 
 void GcsSlidingIn(bool state_changed)
@@ -156,6 +194,39 @@ void BuildGUI()
 	gui.setup();
 	
 	ResizeGUIToFullscreen();
+	
+	// Prepare the statistics screen for a level end
+	@congratulations_text = IMText("Congratulations!", FontSetup("Underdog-Regular", 128, vec4(1.0f, 0.621f, 0.0f, 1.0f), true));
+	gui.getMain().addFloatingElement(congratulations_text, "congratulations_text", vec2(0.0f), 2);
+	
+	FontSetup statistics_font = FontSetup("Underdog-Regular", 50, vec4(1.0f, 0.781f, 0.0f, 1.0f), true);
+	
+	@time_taken_text = IMText("Total Time: ", statistics_font);
+	gui.getMain().addFloatingElement(time_taken_text, "time_taken_text", vec2(0.0f), 2);
+	
+	@time_taken_text2 = IMText("", statistics_font);
+	gui.getMain().addFloatingElement(time_taken_text2, "time_taken_text2", vec2(0.0f), 2);
+	
+	@resets_amount_text = IMText("Reset Amount: ", statistics_font);
+	gui.getMain().addFloatingElement(resets_amount_text, "resets_amount_text", vec2(0.0f), 2);
+	
+	@resets_amount_text2 = IMText("", statistics_font);
+	gui.getMain().addFloatingElement(resets_amount_text2, "resets_amount_text2", vec2(0.0f), 2);
+	
+	gui.update();
+	
+	SetStatisticsVisibility(false);
+	
+	// We only need to move these when the window is resized, because
+	// none of the elements are placed in such a way that they would need to be resized
+	// when the length of their contents change!
+	gui.getMain().moveElement(congratulations_text.getName(), vec2((gui.getMain().getSizeX() - congratulations_text.getSizeX()) / 2.0f, 350.0f));
+	
+	gui.getMain().moveElement(time_taken_text.getName(), vec2(gui.getMain().getSizeX() / 2.0f - time_taken_text.getSizeX(), 500.0f));
+	gui.getMain().moveElement(time_taken_text2.getName(), vec2(gui.getMain().getSizeX() / 2.0f, 500.0f));
+	
+	gui.getMain().moveElement(resets_amount_text.getName(), vec2(gui.getMain().getSizeX() / 2.0f - resets_amount_text.getSizeX(), 560.0f));
+	gui.getMain().moveElement(resets_amount_text2.getName(), vec2(gui.getMain().getSizeX() / 2.0f, 560.0f));
 	
 	// Setup the fade image for the statue preview fullscreen fade.
 	@preview_fade_image = IMImage("Textures/UI/whiteblock.tga");
@@ -289,6 +360,14 @@ void ResizeGUIToFullscreen(bool bFromWindowResize = false)
 	// since this function is also called during gui creation.
 	if (bFromWindowResize)
 	{
+		gui.getMain().moveElement(congratulations_text.getName(), vec2((gui.getMain().getSizeX() - congratulations_text.getSizeX()) / 2.0f, 350.0f));
+	
+		gui.getMain().moveElement(time_taken_text.getName(), vec2(gui.getMain().getSizeX() / 2.0f - time_taken_text.getSizeX(), 500.0f));
+		gui.getMain().moveElement(time_taken_text2.getName(), vec2(gui.getMain().getSizeX() / 2.0f, 500.0f));
+		
+		gui.getMain().moveElement(resets_amount_text.getName(), vec2(gui.getMain().getSizeX() / 2.0f - resets_amount_text.getSizeX(), 560.0f));
+		gui.getMain().moveElement(resets_amount_text2.getName(), vec2(gui.getMain().getSizeX() / 2.0f, 560.0f));
+	
 		gui.getMain().moveElement(
 			counter_container.getName(),
 			vec2(

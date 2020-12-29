@@ -77,7 +77,7 @@ void OpenCustomEditor()
 	
 	for (uint i = 0; i < mods.length(); i++)
 	{
-		if (ModIsCore(mods[i]) || IsWorkshopMod(mods[i])) continue; // || ModGetID(mods[i]) == "the-golden-rabbit") continue;
+		if (ModIsCore(mods[i]) || IsWorkshopMod(mods[i]) || ModGetID(mods[i]) == "the-golden-rabbit") continue;
 		
 		mod_names.insertLast(ModGetName(mods[i]) + " [" + ModGetID(mods[i]) + "]");
 		mod_ids.insertLast(ModGetID(mods[i]));

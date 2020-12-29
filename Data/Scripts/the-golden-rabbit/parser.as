@@ -1,16 +1,3 @@
-JSONValue ReadLevelJsonFromMod(string mod_id)
-{
-	JSONValue level_json;
-	
-	if (!FileExists("Data/TheGoldenRabbit/" + mod_id + "/custom.tgr"))
-		return level_json;
-		
-	array<TGRLevel@> levels_from_mod;
-	ParseLevelsFromFile(levels_from_mod, "Data/TheGoldenRabbit/" + mod_id + "/custom.tgr");
-	
-	return level_json;
-}
-
 void WriteLevelJsonFromTGRData(array<TGRLevel@> tgr_levels, string mod_id)
 {
 	// We are explicitly not writing `overridable´ in this function because
