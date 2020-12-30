@@ -1,21 +1,10 @@
 Changelog:
 
-Added "Congratulations" screen at the end (after finding the last statue)
-Removed pausing the previews for anti-cheat measures, pausing will stop the game timer from counting up though
-
-Removed ReadLevelJsonFromMod (not needed)
-
-Editor works fine now (with the mods in Documents, not intended for ProgramFiles mods)
-
-Core levels flagged overridable
-
 -----
 
 Write README.md after mod is published
 
 Remove any logging on release
-
-Add message interface for other mods to interface with TGR
 
 Notes:
 

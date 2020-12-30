@@ -70,7 +70,7 @@ void GcsSlidingIn(bool state_changed)
 {
 	if (state_changed)
 	{
-		counter_slide_timestamp = GetLevelTime();
+		counter_slide_timestamp = ImGui_GetTime();
 		
 		counter_container.setVisible(true);
 		for (uint i = 0; i < counter_container.getFloatingContents().length(); i++)
@@ -79,9 +79,9 @@ void GcsSlidingIn(bool state_changed)
 
 	RefreshRabbitGuiAnimation();
 
-	if (GetLevelTime() - counter_slide_timestamp <= COUNTER_SLIDE_DURATION)
+	if (ImGui_GetTime() - counter_slide_timestamp <= COUNTER_SLIDE_DURATION)
 	{
-		float percentage = (GetLevelTime() - counter_slide_timestamp) / COUNTER_SLIDE_DURATION;
+		float percentage = (ImGui_GetTime() - counter_slide_timestamp) / COUNTER_SLIDE_DURATION;
 		
 		// We are using 1.001 the length of the GUI because if we only use 1.0
 		// then the counter gui might leave a gap between itself and the window frame.
@@ -113,12 +113,12 @@ void GcsShowing(bool state_changed)
 {
 	if (state_changed)
 	{
-		counter_timestamp = GetLevelTime();
+		counter_timestamp = ImGui_GetTime();
 	}
 
 	RefreshRabbitGuiAnimation();
 
-	if (GetLevelTime() - counter_timestamp >= COUNTER_DURATION)
+	if (ImGui_GetTime() - counter_timestamp >= COUNTER_DURATION)
 	{
 		current_counter_state = GCS_SLIDING_OUT;
 		Log(fatal, "GCS_SHOWING -> GCS_SLIDING_OUT");
@@ -129,14 +129,14 @@ void GcsSlidingOut(bool state_changed)
 {
 	if (state_changed)
 	{
-		counter_slide_timestamp = GetLevelTime();
+		counter_slide_timestamp = ImGui_GetTime();
 	}
 
 	RefreshRabbitGuiAnimation();
 
-	if (GetLevelTime() - counter_slide_timestamp <= COUNTER_SLIDE_DURATION)
+	if (ImGui_GetTime() - counter_slide_timestamp <= COUNTER_SLIDE_DURATION)
 	{
-		float percentage = (GetLevelTime() - counter_slide_timestamp) / COUNTER_SLIDE_DURATION;
+		float percentage = (ImGui_GetTime() - counter_slide_timestamp) / COUNTER_SLIDE_DURATION;
 						
 		gui.getMain().moveElement(
 			counter_container.getName(),
@@ -178,7 +178,7 @@ void UpdateCounterProgressText()
 
 void RefreshRabbitGuiAnimation()
 {
-	int frame = int(floor((GetLevelTime() - floor(GetLevelTime())) * 35));
+	int frame = int(floor((ImGui_GetTime() - floor(ImGui_GetTime())) * 35));
 
 	rabbit_statue_image.setImageFile(
 		"Textures/the-golden-rabbit/UI/Animations/rabbit_statue/frame_" + frame + ".png"

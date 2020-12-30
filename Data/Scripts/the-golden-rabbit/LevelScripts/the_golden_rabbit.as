@@ -101,9 +101,49 @@ void Update(int is_paused)
 
 void ReceiveMessage(string message)
 {
-	if (message == "dispose_level")
+	if (message == "tgr_reset_progress")
 	{
-		Log(fatal, "DISPOSING LEVEL !!!!!!");
+		// Don't reset if the level is no tgr level to begin with.
+		if (current_level is null) return;
+		
+		// Set statue to first position and reset progress.
+		MoveRabbitStatue(current_level.positions[0]);
+		ShowRabbitStatue();
+
+		search_begin_timestamp = GetLevelTime();
+		reset_amount = 0;
+		
+		level_progress = 0;			
+		UpdateCounterProgressText();
+				
+		last_pause_timestamp = 0.0f;
+		paused_time_in_level = 0.0f;		
+		
+		if (player_id != -1) ReadCharacterID(player_id).static_char = false;
+		
+		current_level_state = LSS_PLAYER_IS_SEARCHING;
+		Log(fatal, "LSS_SETUP -> LSS_PLAYER_IS_SEARCHING");
+		
+		current_counter_state = GCS_SLIDING_IN;
+		Log(fatal, "GCS_HIDDEN -> GCS_SLIDING_IN");
+		
+		SetStatisticsVisibility(false);
+		preview_running = false;
+		
+		preview_fade_image.setVisible(false);
+		
+		//editor.as
+		custom_editor_open = false;
+		gui_has_unsaved_changes = false;
+		mod_levels.resize(0);
+		mod_levels_index = -1;
+
+		mod_names.resize(0);
+		mod_ids.resize(0);
+		selected_mod_name = 0;
+
+		selected_position = -1;
+		
 	}
 	else if (message == "post_reset")
 	{
@@ -137,76 +177,6 @@ void ReceiveMessage(string message)
 			
 			// For the other cases we don't have to do anything.
 		}
-	}
-	else if (message == "full_reset")
-	{
-		// Delete and Reset everything ---- NOT THE FINAL SOLUTION
-		DeleteRabbitStatue();
-		
-		last_pause_timestamp = 0.0f;
-		paused_time_in_level = 0.0f;
-		
-		tgr_levels.resize(0);
-		level_progress = -1;
-		
-		@current_level = null;
-		
-		if (player_id != -1) ReadCharacterID(player_id).static_char = false;
-		player_id = -1;
-		player_velocity = vec3(0.0f);
-
-		search_begin_timestamp = 0.0f;
-		reset_amount = 0;
-
-		before_preview_fade_timestamp = 0.0f;
-		preview_fade_mode_switched = false;
-		preview_fade_timestamp = 0.0f;
-		
-		preview_running = false;
-		old_camera_position = vec3(0);
-		old_camera_facing = vec3(0);
-		
-		preview_timestamp = 0.0f;
-		
-		counter_slide_timestamp = 0.0f;
-		counter_timestamp = 0.0f;
-		
-		@gui = null;
-		
-		@congratulations_text = null;
-		@time_taken_text = null;
-		@time_taken_text2 = null;
-		@resets_amount_text = null;
-		@resets_amount_text2 = null;
-		
-		statistics_timestamp = 0.0f;
-		
-		@counter_container = null;
-		@counter_background_image = null;
-		@preview_fade_image = null;
-		@rabbit_statue_image = null;
-		@level_progress_text = null;
-		
-		previous_level_state = LevelScriptState(-1);
-		current_level_state = LevelScriptState(-1);		
-		
-		previous_counter_state = GuiCounterState(-1);
-		current_counter_state = GuiCounterState(-1);
-		
-		//editor.as
-		custom_editor_open = false;
-		gui_has_unsaved_changes = false;
-		mod_levels.resize(0);
-		mod_levels_index = -1;
-
-		mod_names.resize(0);
-		mod_ids.resize(0);
-		selected_mod_name = 0;
-
-		selected_position = -1;
-		
-		// Create everything again
-		Init("CALLED AFTER FULL_RESET");
 	}
 }
 
