@@ -105,7 +105,7 @@ void GcsSlidingIn(bool state_changed)
 		);
 
 		current_counter_state = GCS_SHOWING;
-		Log(fatal, "GCS_SLIDING_IN -> GCS_SHOWING");
+		// Log(fatal, "GCS_SLIDING_IN -> GCS_SHOWING");
 	}
 }
 
@@ -121,7 +121,7 @@ void GcsShowing(bool state_changed)
 	if (ImGui_GetTime() - counter_timestamp >= COUNTER_DURATION)
 	{
 		current_counter_state = GCS_SLIDING_OUT;
-		Log(fatal, "GCS_SHOWING -> GCS_SLIDING_OUT");
+		// Log(fatal, "GCS_SHOWING -> GCS_SLIDING_OUT");
 	}
 }
 
@@ -153,13 +153,13 @@ void GcsSlidingOut(bool state_changed)
 			counter_container.getFloatingContents()[i].setVisible(false);
 
 		current_counter_state = GCS_HIDDEN;
-		Log(fatal, "GCS_SLIDING_OUT -> GCS_HIDDEN");
+		// Log(fatal, "GCS_SLIDING_OUT -> GCS_HIDDEN");
 	}
 }
 
 void UpdateCounterProgressText()
 {
-	Log(fatal, "Updating Progress: " + level_progress);
+	// Log(fatal, "Updating Progress: " + level_progress);
 
 	level_progress_text.setText(level_progress + " / " + current_level.positions.length());
 	

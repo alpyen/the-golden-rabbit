@@ -86,7 +86,7 @@ void OpenCustomEditor()
 	// mod_names contains valid mods that we can use, mods held all the possible candidates.
 	if (mod_names.length() == 0)
 	{
-		Log(error, "The Golden Rabbit: No usable mod found modifying .tgr files.");
+		// Log(error, "The Golden Rabbit: No usable mod found modifying .tgr files.");
 		return;
 	}
 		
@@ -98,7 +98,7 @@ void OpenCustomEditor()
 	
 	current_level_state = LSS_EDITING_LEVEL;
 	current_counter_state = GCS_HIDDEN;
-	Log(fatal, "ScriptState -> " + LSS_EDITING_LEVEL + ", CounterState -> " + GCS_HIDDEN);
+	// Log(fatal, "ScriptState -> " + LSS_EDITING_LEVEL + ", CounterState -> " + GCS_HIDDEN);
 }
 
 void CloseCustomEditor()
@@ -124,7 +124,7 @@ void SetModInLevelEditorGUI()
 	@mod_level = null;	
 	mod_levels.resize(0);
 	
-	Log(fatal, "Loading from mod: " + mod_ids[selected_mod_name]);
+	// Log(fatal, "Loading from mod: " + mod_ids[selected_mod_name]);
 	
 	ParseLevelsFromFile(mod_levels, "Data/TheGoldenRabbit/" + mod_ids[selected_mod_name] + "/custom.tgr");
 	

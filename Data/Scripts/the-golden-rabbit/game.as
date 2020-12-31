@@ -60,10 +60,10 @@ void LssSetup(bool state_changed)
 
 	if (current_level is null)
 	{
-		Log(fatal, "Level has no TGR data / or data is not valid.");
+		// Log(fatal, "Level has no TGR data / or data is not valid.");
 
 		current_level_state = LSS_DO_NOTHING;
-		Log(fatal, "LSS_SETUP -> LSS_DO_NOTHING");
+		// Log(fatal, "LSS_SETUP -> LSS_DO_NOTHING");
 	}
 	else
 	{
@@ -77,10 +77,10 @@ void LssSetup(bool state_changed)
 		UpdateCounterProgressText();
 
 		current_level_state = LSS_PLAYER_IS_SEARCHING;
-		Log(fatal, "LSS_SETUP -> LSS_PLAYER_IS_SEARCHING");
+		// Log(fatal, "LSS_SETUP -> LSS_PLAYER_IS_SEARCHING");
 		
 		current_counter_state = GCS_SLIDING_IN;
-		Log(fatal, "GCS_HIDDEN -> GCS_SLIDING_IN");
+		// Log(fatal, "GCS_HIDDEN -> GCS_SLIDING_IN");
 	}
 }
 
@@ -95,7 +95,7 @@ void LssPlayerIsSearching(bool state_changed)
 	{
 		// Statue was touched.
 		current_level_state = LSS_STATUE_WAS_FOUND;
-		Log(fatal, "LSS_PLAYER_IS_SEARCHING -> LSS_STATUE_WAS_FOUND");
+		// Log(fatal, "LSS_PLAYER_IS_SEARCHING -> LSS_STATUE_WAS_FOUND");
 	}
 }
 
@@ -128,7 +128,7 @@ void LssStatueWasFound(bool state_changed)
 	{
 		// It was in fact the last. Show the mist and show win animation.
 		current_level_state = LSS_ALL_STATUES_FOUND;
-		Log(fatal, "LSS_STATUE_WAS_FOUND -> LSS_ALL_STATUES_FOUND");
+		// Log(fatal, "LSS_STATUE_WAS_FOUND -> LSS_ALL_STATUES_FOUND");
 	}
 	else
 	{			
@@ -148,13 +148,13 @@ void LssStatueWasFound(bool state_changed)
 			if (level.DialogueCameraControl() || EditorModeActive())
 			{
 				ResetToPlayerIsSearching();
-				Log(fatal, "LSS_STATUE_WAS_FOUND [DIALOGUE/EDITOR RUNNING] -> LSS_PLAYER_IS_SEARCHING");
+				// Log(fatal, "LSS_STATUE_WAS_FOUND [DIALOGUE/EDITOR RUNNING] -> LSS_PLAYER_IS_SEARCHING");
 				return;
 			}
 			else
 			{
 				current_level_state = LSS_FADE_TO_STATUE;
-				Log(fatal, "LSS_STATUE_WAS_FOUND -> LSS_FADE_TO_STATUE");	
+				// Log(fatal, "LSS_STATUE_WAS_FOUND -> LSS_FADE_TO_STATUE");	
 			}
 		}
 	}
@@ -182,7 +182,7 @@ void LssFadeToStatue(bool state_changed)
 		
 		if (level.DialogueCameraControl())
 		{
-			Log(fatal, "LSS_FADE_TO_STATUE [DIALOGUE IS RUNNING] -> LSS_PLAYER_IS_SEARCHING");
+			// Log(fatal, "LSS_FADE_TO_STATUE [DIALOGUE IS RUNNING] -> LSS_PLAYER_IS_SEARCHING");
 			ResetToPlayerIsSearching();			
 			return;
 		}
@@ -215,7 +215,7 @@ void LssFadeToStatue(bool state_changed)
 		UpdateCameraAndListenerToLookAtStatue();
 		
 		current_level_state = LSS_LOOKING_AT_STATUE;
-		Log(fatal, "LSS_FADE_TO_STATUE -> LSS_LOOKING_AT_STATUE");
+		// Log(fatal, "LSS_FADE_TO_STATUE -> LSS_LOOKING_AT_STATUE");
 	}
 }
 
@@ -231,7 +231,7 @@ void LssLookingAtStatue(bool state_changed)
 	if (GetLevelTime() - preview_timestamp >= PREVIEW_DURATION)
 	{
 		current_level_state = LSS_FADE_TO_PLAYER;
-		Log(fatal, "LSS_LOOKING_AT_STATUE -> LSS_FADE_TO_PLAYER");
+		// Log(fatal, "LSS_LOOKING_AT_STATUE -> LSS_FADE_TO_PLAYER");
 	}	
 }
 
@@ -276,7 +276,7 @@ void LssFadeToPlayer(bool state_changed)
 		preview_fade_image.setVisible(false);
 		
 		current_level_state = LSS_PLAYER_IS_SEARCHING;
-		Log(fatal, "LSS_FADE_TO_PLAYER -> LSS_PLAYER_IS_SEARCHING");
+		// Log(fatal, "LSS_FADE_TO_PLAYER -> LSS_PLAYER_IS_SEARCHING");
 	}		
 }
 
@@ -299,7 +299,7 @@ void LssAllStatuesFound(bool state_changed)
 	{
 		SetStatisticsVisibility(false);
 	
-		Log(fatal, "LSS_ALL_STATUES_FOUND -> LSS_DO_NOTHING");
+		// Log(fatal, "LSS_ALL_STATUES_FOUND -> LSS_DO_NOTHING");
 		current_level_state = LSS_DO_NOTHING;
 	}
 }

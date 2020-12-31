@@ -27,7 +27,7 @@ void DeleteRabbitStatue()
 {
 	if (rabbit_statue_id != -1)
 	{
-		Log(warning, "Removing old statue [" + rabbit_statue_id + "]");
+		// Log(warning, "Removing old statue [" + rabbit_statue_id + "]");
 		
 		if (ObjectExists(rabbit_statue_id)) DeleteObjectID(rabbit_statue_id);
 		

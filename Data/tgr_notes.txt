@@ -1,11 +1,3 @@
-Changelog:
-
------
-
-Write README.md after mod is published
-
-Remove any logging on release
-
 Notes:
 
 	The error handling in parser.as is so detailed because we are writing the json files

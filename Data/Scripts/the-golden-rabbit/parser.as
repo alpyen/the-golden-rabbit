@@ -85,13 +85,13 @@ array<TGRLevel@> ScanAndParseFiles()
 		
 		if (FileExists("Data/TheGoldenRabbit/" + mod_id + "/custom.tgr"))
 		{
-			LogSuccess("Mod '" + ModGetName(mods[i]) + "' has TGR data. Trying to parse.");
+			// LogSuccess("Mod '" + ModGetName(mods[i]) + "' has TGR data. Trying to parse.");
 			
 			ParseLevelsFromFile(levels, "Data/TheGoldenRabbit/" + mod_id + "/custom.tgr");
 		}
 		else
 		{
-			LogWarning("Mod '" + ModGetName(mods[i]) + "' has no TGR data.");
+			// LogWarning("Mod '" + ModGetName(mods[i]) + "' has no TGR data.");
 		}
 	}
 	
@@ -103,25 +103,25 @@ void ParseLevelsFromFile(array<TGRLevel@>& inout new_levels, string path)
 	JSON json;
 	if (!json.parseFile(path))
 	{
-		LogError("Could not parse file: " + path);
+		// LogError("Could not parse file: " + path);
 		return;
 	}
 	
 	if (json.getRoot().getMemberNames().length() < 1 || json.getRoot().getMemberNames().length() > 2)
 	{
-		LogError("Root level has no or more than 2 elements.");
+		// LogError("Root level has no or more than 2 elements.");
 		return;
 	}
 	
 	if (json.getRoot().getMemberNames().length() == 2 && json.getRoot().getMemberNames().find("overridable") < 0)
 	{
-		LogError("Root level has two elements, but second isn't 'overridable'.");
+		// LogError("Root level has two elements, but second isn't 'overridable'.");
 		return;
 	}
 	
 	if (json.getRoot().getMemberNames().find("levels") < 0)
 	{
-		LogError("Could not find 'levels' element in: " + path);
+		// LogError("Could not find 'levels' element in: " + path);
 		return;
 	}
 	
@@ -130,7 +130,7 @@ void ParseLevelsFromFile(array<TGRLevel@>& inout new_levels, string path)
 	
 	if (!levels.isArray())
 	{
-		LogError("'levels' element is incorrect. Not an array.");
+		// LogError("'levels' element is incorrect. Not an array.");
 		return;
 	}
 	
@@ -141,19 +141,19 @@ void ParseLevelsFromFile(array<TGRLevel@>& inout new_levels, string path)
 		
 		if (current_level.getMemberNames().length() != 2)
 		{
-			LogWarning("Level index " + level_counter + " has more or less than two elements. Skipping Level. [" + path + "]");
+			// LogWarning("Level index " + level_counter + " has more or less than two elements. Skipping Level. [" + path + "]");
 			continue;
 		}
 		
 		if (current_level.getMemberNames().find("level_name") < 0)
 		{
-			LogWarning("Element 'level_name' could not be found at level index " + level_counter + ". Skipping Level. [" + path + "]");
+			// LogWarning("Element 'level_name' could not be found at level index " + level_counter + ". Skipping Level. [" + path + "]");
 			continue;
 		}
 		
 		if (current_level.getMemberNames().find("positions") < 0)
 		{
-			LogWarning("Element 'positions' could not be found at level index " + level_counter + ". Skipping Level. [" + path + "]");
+			// LogWarning("Element 'positions' could not be found at level index " + level_counter + ". Skipping Level. [" + path + "]");
 			continue;
 		}
 	
@@ -176,7 +176,7 @@ void ParseLevelsFromFile(array<TGRLevel@>& inout new_levels, string path)
 		
 		if (level_already_added)
 		{
-			LogWarning("Level '" + current_level["level_name"].asString() + "' has already been parsed.");
+			// LogWarning("Level '" + current_level["level_name"].asString() + "' has already been parsed.");
 			continue;
 		}
 		
@@ -191,7 +191,7 @@ void ParseLevelsFromFile(array<TGRLevel@>& inout new_levels, string path)
 		
 		if (positions.size() == 0)
 		{
-			LogWarning("Positions of level '" + new_level.level_name + "' is 0. Ignoring.");
+			// LogWarning("Positions of level '" + new_level.level_name + "' is 0. Ignoring.");
 			continue;
 		}
 		
@@ -201,19 +201,19 @@ void ParseLevelsFromFile(array<TGRLevel@>& inout new_levels, string path)
 			
 			if (current_position.getMemberNames().length() != 3)
 			{
-				LogWarning("Position index " + position_counter + " of the level'" + new_level.level_name + "' has more or less than 3 elements.");
+				// LogWarning("Position index " + position_counter + " of the level'" + new_level.level_name + "' has more or less than 3 elements.");
 				position_invalid = true;
 				break;
 			}
 			else if (current_position.getMemberNames().find("camera") < 0 || current_position.getMemberNames().find("statue") < 0 || current_position.getMemberNames().find("statue_rotation") < 0)
 			{
-				LogWarning("Could not find element 'camera' or 'statue' at position index " + position_counter + " of the level'" + new_level.level_name + "'");
+				// LogWarning("Could not find element 'camera' or 'statue' at position index " + position_counter + " of the level'" + new_level.level_name + "'");
 				position_invalid = true;
 				break;
 			}
 			else if (current_position["camera"].size() != 3 || current_position["statue"].size() != 3)
 			{
-				LogWarning("Camera or Statue position at position index " + position_counter + " of the level '" + new_level.level_name + "' is invalid.");
+				// LogWarning("Camera or Statue position at position index " + position_counter + " of the level '" + new_level.level_name + "' is invalid.");
 				position_invalid = true;
 				break;
 			}
@@ -243,7 +243,7 @@ void ParseLevelsFromFile(array<TGRLevel@>& inout new_levels, string path)
 		
 		if (override_level)
 		{
-			LogWarning("Level '" + new_level.level_name + "' was already added and is overridable. Overriding now.");
+			// LogWarning("Level '" + new_level.level_name + "' was already added and is overridable. Overriding now.");
 		
 			for (uint i = 0; i < new_levels.length(); i++)
 			{
@@ -260,7 +260,7 @@ void ParseLevelsFromFile(array<TGRLevel@>& inout new_levels, string path)
 		}
 	}
 	
-	LogSuccess("File was parsed completely! [" + path + "]");
+	// LogSuccess("File was parsed completely! [" + path + "]");
 }
 
 void LogError(string message)

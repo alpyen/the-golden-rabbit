@@ -22,18 +22,18 @@ void Init(string level_name)
 	// Once with no level_name. // Maybe switch to LSS_SETUP again?
 	if (level_name == "") return;
 
-	Log(fatal, GetLevelTime() + " Init(\"" + level_name + "\");");
+	// Log(fatal, GetLevelTime() + " Init(\"" + level_name + "\");");
 	
 	BuildGUI();	
 	CreateRabbitStatue(); // Hidden by default
 	
 	previous_level_state = LevelScriptState(-1);
 	current_level_state = LSS_SETUP;
-	Log(fatal, "-1 -> LSS_SETUP");
+	// Log(fatal, "-1 -> LSS_SETUP");
 	
 	previous_counter_state = GuiCounterState(-1);
 	current_counter_state = GCS_HIDDEN;
-	Log(fatal, "-1 -> GCS_HIDDEN");
+	// Log(fatal, "-1 -> GCS_HIDDEN");
 }
 
 void Update(int is_paused)
@@ -122,10 +122,10 @@ void ReceiveMessage(string message)
 		if (player_id != -1) ReadCharacterID(player_id).static_char = false;
 		
 		current_level_state = LSS_PLAYER_IS_SEARCHING;
-		Log(fatal, "LSS_SETUP -> LSS_PLAYER_IS_SEARCHING");
+		// Log(fatal, "LSS_SETUP -> LSS_PLAYER_IS_SEARCHING");
 		
 		current_counter_state = GCS_SLIDING_IN;
-		Log(fatal, "GCS_HIDDEN -> GCS_SLIDING_IN");
+		// Log(fatal, "GCS_HIDDEN -> GCS_SLIDING_IN");
 		
 		SetStatisticsVisibility(false);
 		preview_running = false;
@@ -149,7 +149,7 @@ void ReceiveMessage(string message)
 	{
 		reset_amount += 1;
 	
-		Log(fatal, ImGui_GetTime() + "POST_RESET_WAS_CALLED");
+		// Log(fatal, ImGui_GetTime() + "POST_RESET_WAS_CALLED");
 	
 		switch (current_level_state)
 		{
@@ -157,13 +157,13 @@ void ReceiveMessage(string message)
 			case LSS_FADE_TO_STATUE:
 			case LSS_LOOKING_AT_STATUE: {
 			
-				Log(warning, "ITS RESET TIME");
+				// Log(warning, "ITS RESET TIME");
 			
 				// Player could be in fade, remove the fade and keep on searching.
 				preview_fade_image.setVisible(false);
 				preview_running = false;
 				
-				Log(fatal, "<RESET> -> LSS_PLAYER_IS_SEARCHING");
+				// Log(fatal, "<RESET> -> LSS_PLAYER_IS_SEARCHING");
 				current_level_state = LSS_PLAYER_IS_SEARCHING;
 			
 			} break;
@@ -171,7 +171,7 @@ void ReceiveMessage(string message)
 			case LSS_ALL_STATUES_FOUND: {
 				SetStatisticsVisibility(false);
 			
-				Log(fatal, "<RESET FROM ALL STATUES FOUND> -> LSS_DO_NOTHING");
+				// Log(fatal, "<RESET FROM ALL STATUES FOUND> -> LSS_DO_NOTHING");
 				current_level_state = LSS_DO_NOTHING;
 			} break;
 			
@@ -257,7 +257,7 @@ void DetectEditorMode()
 			case LSS_LOOKING_AT_STATUE:
 			case LSS_FADE_TO_PLAYER: {
 				ResetToPlayerIsSearching();
-				Log(fatal, "EDITOR DETECTED -> LSS_PLAYER_IS_SEARCHING");
+				// Log(fatal, "EDITOR DETECTED -> LSS_PLAYER_IS_SEARCHING");
 			} break;
 		}
 	}
